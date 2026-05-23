@@ -1,0 +1,126 @@
+/* ─── EldenGuard Content Styles ────────────────────────────────────────────── */
+/* All selectors are prefixed with #eldenguard- to avoid clashing with page CSS */
+
+/* ── Avatar button ─────────────────────────────────────────────────────────── */
+#eldenguard-avatar {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2147483646; /* max z-index - 1 */
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: #062A52;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  padding: 0;
+}
+
+#eldenguard-avatar:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(0, 168, 150, 0.4);
+}
+
+#eldenguard-avatar.active {
+  background: #00A896;
+  transform: scale(1.05);
+}
+
+/* Pulse ring animation when a threat is detected */
+#eldenguard-avatar.danger-pulse::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid #DC2626;
+  animation: eldenguard-pulse 1.2s ease-out infinite;
+}
+
+@keyframes eldenguard-pulse {
+  0%   { transform: scale(1);   opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* ── Sidebar iframe ─────────────────────────────────────────────────────────── */
+#eldenguard-sidebar {
+  position: fixed;
+  top: 0;
+  right: -380px; /* hidden off screen */
+  width: 360px;
+  height: 100vh;
+  z-index: 2147483645;
+  border: none;
+  border-left: 1px solid rgba(0, 168, 150, 0.3);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #fff;
+}
+
+#eldenguard-sidebar.open {
+  right: 0;
+}
+
+/* ── Alert banner ───────────────────────────────────────────────────────────── */
+#eldenguard-alert {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2147483644;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  animation: eldenguard-slide-down 0.3s ease;
+}
+
+@keyframes eldenguard-slide-down {
+  from { transform: translateY(-100%); }
+  to   { transform: translateY(0); }
+}
+
+.eldenguard-alert--danger {
+  background: #FEF2F2;
+  color: #991B1B;
+  border-bottom: 2px solid #DC2626;
+}
+
+.eldenguard-alert--warning {
+  background: #FFFBEB;
+  color: #92400E;
+  border-bottom: 2px solid #F59E0B;
+}
+
+.eldenguard-alert--info {
+  background: #EFF6FF;
+  color: #1E3A5F;
+  border-bottom: 2px solid #3B82F6;
+}
+
+.eldenguard-alert__text {
+  flex: 1;
+}
+
+.eldenguard-alert__close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: inherit;
+  opacity: 0.7;
+  padding: 0 0 0 16px;
+  line-height: 1;
+}
+
+.eldenguard-alert__close:hover {
+  opacity: 1;
+}

@@ -1,0 +1,206 @@
+/* ─── EldenGuard Sidebar Styles ────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:    #062A52;
+  --teal:    #00A896;
+  --ltblue:  #CADCFC;
+  --offwh:   #F4F8FF;
+  --gray:    #64748B;
+  --dkgray:  #1E293B;
+  --amber:   #F5A623;
+  --danger:  #DC2626;
+  --font:    -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body { font-family: var(--font); font-size: 15px; background: #fff; color: var(--dkgray); height: 100vh; overflow: hidden; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+/* ── Layout ─────────────────────────────────────────────────────────────────── */
+.sidebar { display: flex; flex-direction: column; height: 100vh; }
+
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+.sidebar__header {
+  background: var(--navy);
+  color: white;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.sidebar__brand { display: flex; align-items: center; gap: 10px; }
+
+.sidebar__avatar-mini {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar__title { font-size: 16px; font-weight: 600; margin: 0; }
+.sidebar__subtitle {
+  font-size: 11px; color: rgba(255,255,255,0.5);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 180px; margin-top: 2px;
+}
+
+.sidebar__status { font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: 500; }
+.sidebar__status.safe    { background: rgba(0,168,150,0.2); color: #5DCAA5; }
+.sidebar__status.danger  { background: rgba(220,38,38,0.2); color: #FCA5A5; }
+.sidebar__status.checking { color: rgba(255,255,255,0.4); }
+
+/* ── Quick actions ───────────────────────────────────────────────────────────── */
+.quick-actions {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--offwh);
+  border-bottom: 1px solid #E2E8F0;
+  flex-shrink: 0;
+}
+
+.quick-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--gray);
+  font-family: var(--font);
+  transition: all 0.15s;
+}
+
+.quick-btn:hover { border-color: var(--teal); color: var(--teal); background: #F0FDFB; }
+.quick-btn:active { transform: scale(0.97); }
+.quick-btn__icon { font-size: 18px; line-height: 1; }
+
+/* ── Chat messages ───────────────────────────────────────────────────────────── */
+.chat {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+}
+
+.chat__welcome {
+  background: var(--offwh);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--gray);
+  border-left: 3px solid var(--teal);
+}
+.chat__welcome p + p { margin-top: 8px; }
+
+/* Message bubbles */
+.message { display: flex; flex-direction: column; max-width: 88%; }
+.message--user   { align-self: flex-end; align-items: flex-end; }
+.message--guard  { align-self: flex-start; align-items: flex-start; }
+
+.message__bubble {
+  padding: 10px 13px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  word-wrap: break-word;
+}
+
+.message--user  .message__bubble { background: var(--navy);  color: white; border-bottom-right-radius: 4px; }
+.message--guard .message__bubble { background: var(--offwh); color: var(--dkgray); border: 1px solid #E2E8F0; border-bottom-left-radius: 4px; }
+
+.message__time { font-size: 10px; color: var(--gray); margin-top: 3px; }
+
+/* Typing indicator */
+.typing-indicator .message__bubble {
+  display: flex; gap: 4px; align-items: center; padding: 12px 14px;
+}
+.typing-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--teal);
+  animation: typing 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30%            { transform: translateY(-5px); opacity: 1; }
+}
+
+/* ── Input area ─────────────────────────────────────────────────────────────── */
+.input-area {
+  flex-shrink: 0;
+  padding: 10px 12px 12px;
+  border-top: 1px solid #E2E8F0;
+  background: white;
+}
+
+.input-area__row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.input-area__textarea {
+  flex: 1;
+  resize: none;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--dkgray);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input-area__textarea:focus { border-color: var(--teal); }
+.input-area__textarea::placeholder { color: #94A3B8; }
+
+.input-area__send {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  border: none;
+  background: var(--teal);
+  color: white;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.input-area__send:hover   { background: #008F7C; }
+.input-area__send:active  { transform: scale(0.95); }
+.input-area__send:disabled { background: #CBD5E1; cursor: not-allowed; }
+
+.input-area__hint { font-size: 10px; color: #94A3B8; margin-top: 5px; text-align: center; }
+
+/* Screenshot preview */
+.screenshot-preview {
+  margin-bottom: 8px;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #E2E8F0;
+}
+.screenshot-preview img { width: 100%; display: block; max-height: 120px; object-fit: cover; }
+.screenshot-preview__remove {
+  position: absolute; top: 4px; right: 4px;
+  background: rgba(0,0,0,0.5); color: white;
+  border: none; border-radius: 50%; width: 22px; height: 22px;
+  font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}

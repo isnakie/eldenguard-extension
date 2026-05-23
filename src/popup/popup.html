@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>EldenGuard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 300px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #062A52;
+      color: white;
+      padding: 20px;
+    }
+    .header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .header svg { flex-shrink: 0; }
+    h1 { font-size: 18px; font-weight: 600; }
+    p.tagline { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+    .status-card {
+      background: rgba(255,255,255,0.08);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+    .status-label { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: .04em; }
+    .status-value { font-size: 14px; font-weight: 500; margin-top: 4px; color: #00A896; }
+    .status-value.danger { color: #FCA5A5; }
+    .status-value.safe { color: #00A896; }
+
+    button.action {
+      display: block;
+      width: 100%;
+      padding: 11px 14px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.07);
+      color: white;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.15s;
+    }
+    button.action:hover { background: rgba(255,255,255,0.14); }
+    .action-icon { font-size: 18px; }
+    .footer { font-size: 10px; color: rgba(255,255,255,0.3); text-align: center; margin-top: 14px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+      <circle cx="18" cy="15" r="12" fill="#0D3B6E"/>
+      <circle cx="13" cy="14" r="4.5" fill="#CADCFC"/>
+      <circle cx="13" cy="14" r="3" fill="#00A896"/>
+      <circle cx="13" cy="14" r="1.5" fill="#062A52"/>
+      <circle cx="14" cy="13" r="0.8" fill="white"/>
+      <circle cx="23" cy="14" r="4.5" fill="#CADCFC"/>
+      <circle cx="23" cy="14" r="3" fill="#00A896"/>
+      <circle cx="23" cy="14" r="1.5" fill="#062A52"/>
+      <circle cx="24" cy="13" r="0.8" fill="white"/>
+      <path d="M15 19 L18 22 L21 19 Q18 17 15 19Z" fill="#F5A623"/>
+      <path d="M18 26 L22 27.5 L22 32.5 Q22 35 18 36 Q14 35 14 32.5 L14 27.5 Z" fill="#00A896"/>
+      <path d="M16 31 L17.5 33 L20.5 29" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+    <div>
+      <h1>EldenGuard</h1>
+      <p class="tagline">Your browser safety co-pilot</p>
+    </div>
+  </div>
+
+  <div class="status-card">
+    <div class="status-label">Current page</div>
+    <div class="status-value" id="page-status">Checking...</div>
+  </div>
+
+  <button class="action" id="btn-open-sidebar">
+    <span class="action-icon">??</span>
+    <span>Open assistant panel</span>
+  </button>
+
+  <button class="action" id="btn-check-now">
+    <span class="action-icon">??</span>
+    <span>Check this page now</span>
+  </button>
+
+  <p class="footer">EldenGuard v0.1.0 • Capstone Project</p>
+
+  <script>
+    // Show current tab URL and check safety
+    chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+      const statusEl = document.getElementById("page-status");
+      if (tab?.url) {
+        try {
+          const hostname = new URL(tab.url).hostname;
+          statusEl.textContent = hostname;
+          
+          // Check if the page is safe
+          chrome.runtime.sendMessage({
+            type: "CHECK_URL",
+            payload: { url: tab.url }
+          }, (response) => {
+            if (response?.success) {
+              if (response.result.isThreat) {
+                statusEl.textContent = "?? " + hostname;
+                statusEl.classList.add("danger");
+              } else {
+                statusEl.textContent = "? " + hostname;
+                statusEl.classList.add("safe");
+              }
+            }
+          });
+        } catch {
+          statusEl.textContent = "Local page";
+        }
+      }
+    });
+
+    // Open sidebar on the current tab
+    document.getElementById("btn-open-sidebar").addEventListener("click", () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+        // Try to send message to content script
+        chrome.tabs.sendMessage(tab.id, { type: "TOGGLE_SIDEBAR" }, (response) => {
+          if (chrome.runtime.lastError) {
+            // Content script not loaded, inject it first
+            chrome.scripting.executeScript({
+              target: { tabId: tab.id },
+              files: ["src/content/content.js"]
+            }, () => {
+              chrome.scripting.insertCSS({
+                target: { tabId: tab.id },
+                files: ["src/content/content.css"]
+              }, () => {
+                // Now try again
+                setTimeout(() => {
+                  chrome.tabs.sendMessage(tab.id, { type: "TOGGLE_SIDEBAR" });
+                }, 100);
+              });
+            });
+          }
+        });
+        window.close();
+      });
+    });
+
+    // Trigger a page check from the popup
+    document.getElementById("btn-check-now").addEventListener("click", () => {
+      const statusEl = document.getElementById("page-status");
+      statusEl.textContent = "Checking...";
+      
+      chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+        chrome.runtime.sendMessage({
+          type: "ASK_ELDENGUARD",
+          payload: { question: "Is this website safe? Explain simply.", url: tab.url }
+        }, (res) => {
+          if (res?.success) {
+            // Show first part of response in status
+            const shortResponse = res.text.includes("safe") ? "? Safe" : "?? Check warnings";
+            statusEl.textContent = shortResponse;
+            
+            // Open sidebar to show full response
+            chrome.tabs.sendMessage(tab.id, { type: "TOGGLE_SIDEBAR" }, () => {
+              if (chrome.runtime.lastError) {
+                // If content script not loaded, show alert
+                alert(res.text);
+              } else {
+                // Send the response to sidebar
+                setTimeout(() => {
+                  chrome.tabs.sendMessage(tab.id, {
+                    type: "SHOW_RESULT",
+                    payload: { text: res.text, context: "safety_check" }
+                  });
+                }, 500);
+              }
+            });
+          } else {
+            statusEl.textContent = "Check failed";
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

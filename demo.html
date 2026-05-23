@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EldenGuard Demo Page</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #062A52;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        .demo-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .demo-section h2 {
+            color: #00A896;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        .demo-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .demo-links a {
+            color: #0066cc;
+            text-decoration: none;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            transition: all 0.3s;
+        }
+        .demo-links a:hover {
+            background: #f0f0f0;
+            border-color: #00A896;
+        }
+        .warning-link {
+            color: #dc2626 !important;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 8px 0;
+        }
+        button {
+            background: #00A896;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #008c7c;
+        }
+        .form-demo {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .form-demo input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .suspicious-text {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🦉 EldenGuard Extension Demo</h1>
+    <p class="subtitle">Test the browser safety features</p>
+
+    <div class="instructions">
+        <h3>📋 How to test EldenGuard:</h3>
+        <ol>
+            <li>Look for the <strong>owl avatar</strong> in the bottom-right corner of this page</li>
+            <li>Click the <strong>EldenGuard icon</strong> in your browser toolbar</li>
+            <li>Click the owl avatar to open the <strong>assistant sidebar</strong></li>
+            <li>Try the quick action buttons or type a question</li>
+            <li>Right-click on any link and select <strong>"Check this link with EldenGuard"</strong></li>
+            <li>Select any text and right-click to <strong>"Ask EldenGuard about this"</strong></li>
+        </ol>
+    </div>
+
+    <div class="demo-section">
+        <h2>🔗 Test Links</h2>
+        <p>Try checking these links with EldenGuard:</p>
+        <div class="demo-links">
+            <a href="https://www.google.com">Safe Link: Google.com</a>
+            <a href="https://www.amazon.com">Safe Link: Amazon.com</a>
+            <a href="http://suspicious-phishing-test.com" class="warning-link">Suspicious: Phishing Test Link</a>
+            <a href="http://verify-account-now-urgent.com" class="warning-link">Suspicious: Fake Account Verification</a>
+            <a href="http://free-gift-claim-winner.com" class="warning-link">Suspicious: Prize Scam Link</a>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>📝 Suspicious Form Demo</h2>
+        <p>This form simulates a phishing attempt. Ask EldenGuard about it:</p>
+        <div class="form-demo">
+            <input type="text" placeholder="Enter your Social Security Number">
+            <input type="password" placeholder="Enter your Bank Password">
+            <input type="text" placeholder="Credit Card Number">
+            <button type="button" onclick="alert('This is just a demo - never enter real information!')">Submit (Demo Only)</button>
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>📄 Suspicious Text</h2>
+        <p>Select this text and ask EldenGuard about it:</p>
+        <div class="suspicious-text">
+            <strong>URGENT: Your Account Will Be Suspended!</strong><br><br>
+            Dear Customer,<br><br>
+            We detected suspicious activity on your account. You must verify your identity immediately or your account will be permanently suspended in 24 hours.
+            Click here to confirm your identity and provide your banking details to prevent suspension.
+            <br><br>
+            This is an automated message. Do not reply.
+        </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>🎯 Quick Tests</h2>
+        <ul>
+            <li>Click the <strong>"Check this page now"</strong> button in the EldenGuard popup</li>
+            <li>Open the sidebar and click <strong>"Is this page safe?"</strong></li>
+            <li>Try the <strong>"Screen Grab"</strong> feature to analyze what's on screen</li>
+            <li>Type questions like "What does this website do?" or "Is this legitimate?"</li>
+        </ul>
+    </div>
+</div>
+</body>
+</html>
