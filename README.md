@@ -4,7 +4,7 @@ AI-assisted browser safety co-pilot designed to help elderly and non-technical u
 
 ## Overview
 
-EldenGuard is a Chrome Extension built as a cybersecurity capstone project focused on improving online safety and accessibility for elderly internet users.
+EldenGuard is a Chrome Extension project focused on improving online safety and accessibility for elderly internet users.
 
 The extension provides:
 - Real-time website safety analysis
@@ -193,7 +193,7 @@ This allows frontend and extension development without requiring cloud infrastru
 
 # Educational Purpose
 
-This project is developed as part of a university cybersecurity capstone project and is currently intended for educational and research purposes.
+This project is developed as part of UC Berkeley's MICS capstone project and is currently intended for educational and research purposes.
 
 ---
 
