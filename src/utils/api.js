@@ -1,65 +1,57 @@
-// EldenGuard API Client - MOCK VERSION FOR DEMO
-// This is a mock version that works without AWS for demo purposes.
-// Replace this with real API calls once AWS Lambda is deployed.
+// EldenGuard API Client - LM Studio (local)
+// Requires LM Studio running with local server enabled on port 1234.
+// Load any model in LM Studio, then start the server under the "Local Server" tab.
 
-// Mock response database for demo purposes
-const MOCK_RESPONSES = {
-  safety: [
-    "This website appears to be safe. I don't see any immediate red flags. However, always be careful when entering personal information.",
-    "I notice this site uses secure HTTPS encryption, which is good. The domain looks legitimate.",
-    "This looks like a legitimate website. The security certificate is valid and the domain has been registered for several years."
-  ],
-  warning: [
-    "Be careful! This site is asking for sensitive information. Never give out your Social Security number or bank details unless you're absolutely sure it's legitimate.",
-    "I notice several warning signs here. The URL doesn't match the company name, and they're creating urgency. This could be a scam.",
-    "This looks suspicious. Real companies don't usually ask for passwords or credit card information through email links."
-  ],
-  help: [
-    "I'm here to help! This appears to be a form asking for information. Only fill it out if you initiated this action and trust the website.",
-    "Let me explain what this means: This is a cookie consent notice. Cookies are small files websites use to remember you. It's generally safe to accept.",
-    "This is a login page. Make sure you see a padlock icon in your browser's address bar before entering your password."
-  ],
-  general: [
-    "I'm EldenGuard, your browser safety assistant! I can help you identify scams, explain confusing web content, and keep you safe online.",
-    "Feel free to ask me anything about the website you're viewing. I'm here to help you browse safely!",
-    "If something seems suspicious or confusing, just let me know and I'll help you understand it better."
-  ]
-};
+const LM_STUDIO_URL = 'http://localhost:1234/v1/chat/completions';
 
-// Simulate API delay for realism
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const SYSTEM_PROMPT = `You are EldenGuard, a friendly browser safety assistant.
+Your job is to help users identify scams, phishing attempts, and unsafe websites.
+Be concise and clear. When analyzing a page, focus on:
+- URL legitimacy (typosquatting, suspicious TLDs, mismatched branding)
+- Urgency or pressure tactics
+- Requests for sensitive info (SSN, passwords, bank details)
+- Trust signals (HTTPS, known domain, contact info)
+Keep responses under 3 sentences unless the user asks for more detail.`;
 
 /**
- * Mock API call that simulates EldenGuard responses
+ * Calls the local LM Studio server for an EldenGuard response.
  * @param {Object} params
- * @param {string} params.message  - User's question or auto-generated prompt
- * @param {string} params.url      - Current page URL (context)
- * @param {string} [params.screenshot] - Optional base64 screenshot
- * @returns {Promise<string>} Mock response simulating Claude
+ * @param {string} params.message - User's question or auto-generated prompt
+ * @param {string} params.url - Current page URL (context)
+ * @param {string} [params.screenshot] - Unused for now (text-only models)
+ * @returns {Promise<string>} Model response
  */
 export async function callEldenGuardAPI({ message, url, screenshot = null }) {
-  // Simulate network delay (300-800ms)
-  await delay(300 + Math.random() * 500);
+  const userMessage = url
+    ? `Current page URL: ${url}\n\nUser: ${message}`
+    : message;
 
-  // Analyze the message to determine response type
-  const lowerMessage = message.toLowerCase();
-  
-  if (lowerMessage.includes('safe') || lowerMessage.includes('check this')) {
-    // Check if URL contains suspicious patterns
-    if (url && (url.includes('phishing') || url.includes('scam') || url.includes('suspicious'))) {
-      return MOCK_RESPONSES.warning[Math.floor(Math.random() * MOCK_RESPONSES.warning.length)];
-    }
-    return MOCK_RESPONSES.safety[Math.floor(Math.random() * MOCK_RESPONSES.safety.length)];
+  let response;
+  try {
+    response = await fetch(LM_STUDIO_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'local-model',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: userMessage }
+        ],
+        temperature: 0.4,
+        max_tokens: 300,
+        stream: false
+      })
+    });
+  } catch (err) {
+    throw new Error(
+      'Cannot reach LM Studio. Make sure the app is open and the local server is started (Local Server tab → Start Server).'
+    );
   }
-  
-  if (lowerMessage.includes('what') || lowerMessage.includes('explain') || lowerMessage.includes('mean')) {
-    return MOCK_RESPONSES.help[Math.floor(Math.random() * MOCK_RESPONSES.help.length)];
+
+  if (!response.ok) {
+    throw new Error(`LM Studio returned an error: ${response.status} ${response.statusText}`);
   }
-  
-  if (lowerMessage.includes('suspicious') || lowerMessage.includes('scam') || lowerMessage.includes('fake')) {
-    return MOCK_RESPONSES.warning[Math.floor(Math.random() * MOCK_RESPONSES.warning.length)];
-  }
-  
-  // Default responses
-  return MOCK_RESPONSES.general[Math.floor(Math.random() * MOCK_RESPONSES.general.length)];
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content?.trim() ?? 'No response from model.';
 }

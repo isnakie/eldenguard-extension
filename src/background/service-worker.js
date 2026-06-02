@@ -23,33 +23,32 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "analyzeLink") {
-    const result = await callEldenGuardAPI({
-      message: `Is this link safe? Explain in simple terms: ${info.linkUrl}`,
-      url: info.linkUrl,
-    });
-    // Send result to the content script to display in the sidebar
     try {
+      const result = await callEldenGuardAPI({
+        message: `Is this link safe? Explain in simple terms: ${info.linkUrl}`,
+        url: info.linkUrl,
+      });
       chrome.tabs.sendMessage(tab.id, {
         type: "SHOW_RESULT",
         payload: { text: result, context: "link_check" },
       });
     } catch (error) {
-      console.log("Content script not loaded yet");
+      console.error("EldenGuard API error:", error.message);
     }
   }
 
   if (info.menuItemId === "analyzeSelection") {
-    const result = await callEldenGuardAPI({
-      message: `What does this mean? Is anything suspicious here? "${info.selectionText}"`,
-      url: tab.url,
-    });
     try {
+      const result = await callEldenGuardAPI({
+        message: `What does this mean? Is anything suspicious here? "${info.selectionText}"`,
+        url: tab.url,
+      });
       chrome.tabs.sendMessage(tab.id, {
         type: "SHOW_RESULT",
         payload: { text: result, context: "text_check" },
       });
     } catch (error) {
-      console.log("Content script not loaded yet");
+      console.error("EldenGuard API error:", error.message);
     }
   }
 });
