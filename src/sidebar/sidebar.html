@@ -50,7 +50,23 @@
         <span class="quick-btn__icon">💬</span>
         <span>Explain page</span>
       </button>
+      <button class="quick-btn" id="btn-scam-alerts" title="Recent scam alerts from FTC">
+        <span class="quick-btn__icon">🚨</span>
+        <span>Scam Alerts</span>
+      </button>
     </div>
+
+    <!-- FTC Scam Alerts Panel -->
+    <section class="alerts-panel" id="alerts-panel" hidden aria-label="Recent FTC Scam Alerts">
+      <div class="alerts-panel__header">
+        <span>Recent FTC Scam Alerts</span>
+        <button class="alerts-panel__close" id="btn-close-alerts" aria-label="Close alerts panel">✕</button>
+      </div>
+      <div class="alerts-panel__list" id="alerts-list">
+        <p class="alerts-panel__loading">Loading alerts...</p>
+      </div>
+      <p class="alerts-panel__source">Source: <a href="https://consumer.ftc.gov" target="_blank" rel="noopener">consumer.ftc.gov</a></p>
+    </section>
 
     <!-- Chat messages -->
     <main class="chat" id="chat-messages" aria-label="Chat with EldenGuard" aria-live="polite">
