@@ -1,11 +1,15 @@
-// EldenGuard Background Service Worker - DEMO VERSION
-// Handles: Mock API calls, URL safety checks, context menus, and message routing.
+// EldenGuard Background Service Worker
+// Handles: API calls, URL safety checks, context menus, RSS feed refresh, and message routing.
 
 import { checkUrlSafety } from "../utils/safety.js";
 import { callEldenGuardAPI } from "../utils/api.js";
+import { refreshScamAlertsCache } from "../utils/rss.js";
 
-// CONTEXT MENUS
+// CONTEXT MENUS + ALARM SETUP
 chrome.runtime.onInstalled.addListener(() => {
+  // Refresh FTC RSS feed every hour in the background
+  chrome.alarms.create('refreshScamAlerts', { periodInMinutes: 60 });
+
   chrome.contextMenus.create({
     id: "analyzeLink",
     title: "Check this link with EldenGuard",
@@ -78,6 +82,13 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     }
   } else {
     chrome.action.setBadgeText({ tabId, text: "" });
+  }
+});
+
+// ALARM HANDLER
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'refreshScamAlerts') {
+    refreshScamAlertsCache().catch(console.error);
   }
 });
 

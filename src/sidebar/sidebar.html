@@ -13,7 +13,7 @@
     <header class="sidebar__header">
       <div class="sidebar__brand">
         <div class="sidebar__avatar-mini" aria-hidden="true">
-          <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
+          <svg width="28" height="28" viewBox="0 0 36 36" >
             <circle cx="18" cy="15" r="12" fill="#0D3B6E"/>
             <circle cx="13" cy="14" r="4.5" fill="#CADCFC"/>
             <circle cx="13" cy="14" r="3" fill="#00A896"/>
@@ -50,7 +50,23 @@
         <span class="quick-btn__icon">💬</span>
         <span>Explain page</span>
       </button>
+      <button class="quick-btn" id="btn-scam-alerts" title="Recent scam alerts from FTC">
+        <span class="quick-btn__icon">🚨</span>
+        <span>Scam Alerts</span>
+      </button>
     </div>
+
+    <!-- FTC Scam Alerts Panel -->
+    <section class="alerts-panel" id="alerts-panel" hidden aria-label="Recent FTC Scam Alerts">
+      <div class="alerts-panel__header">
+        <span>Recent FTC Scam Alerts</span>
+        <button class="alerts-panel__close" id="btn-close-alerts" aria-label="Close alerts panel">✕</button>
+      </div>
+      <div class="alerts-panel__list" id="alerts-list">
+        <p class="alerts-panel__loading">Loading alerts...</p>
+      </div>
+      <p class="alerts-panel__source">Source: <a href="https://consumer.ftc.gov" target="_blank" rel="noopener">consumer.ftc.gov</a></p>
+    </section>
 
     <!-- Chat messages -->
     <main class="chat" id="chat-messages" aria-label="Chat with EldenGuard" aria-live="polite">
@@ -73,7 +89,7 @@
           maxlength="500"
         ></textarea>
         <button class="input-area__send" id="btn-send" aria-label="Send message">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
@@ -82,6 +98,6 @@
     </footer>
   </div>
 
-  <script src="sidebar.js"></script>
+  <script type="module" src="sidebar.js"></script>
 </body>
 </html>
