@@ -1,7 +1,7 @@
 // EldenGuard Background Service Worker
 // Handles: API calls, URL safety checks, context menus, RSS feed refresh, and message routing.
 
-import { checkUrlSafety } from "../utils/safety.js";
+import { checkUrlSafety, analyzeLinkForContextMenu } from "../utils/safety.js";
 import { callEldenGuardAPI } from "../utils/api.js";
 import { refreshScamAlertsCache } from "../utils/rss.js";
 
@@ -12,13 +12,13 @@ chrome.runtime.onInstalled.addListener(() => {
 
   chrome.contextMenus.create({
     id: "analyzeLink",
-    title: "Check this link with EldenGuard",
+    title: "Check this link with WiseOwl",
     contexts: ["link"],
   });
 
   chrome.contextMenus.create({
     id: "analyzeSelection",
-    title: "Ask EldenGuard about this",
+    title: "Ask WiseOwl about this",
     contexts: ["selection"],
   });
 
@@ -27,18 +27,14 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "analyzeLink") {
-    try {
-      const result = await callEldenGuardAPI({
-        message: `Is this link safe? Explain in simple terms: ${info.linkUrl}`,
-        url: info.linkUrl,
-      });
-      chrome.tabs.sendMessage(tab.id, {
-        type: "SHOW_RESULT",
-        payload: { text: result, context: "link_check" },
-      });
-    } catch (error) {
-      console.error("EldenGuard API error:", error.message);
-    }
+    // Pass the LLM function so it's used when available, skipped when not
+    const { summary } = await analyzeLinkForContextMenu(info.linkUrl, async (prompt, url) => {
+      return await callEldenGuardAPI({ message: prompt, url });
+    });
+    chrome.tabs.sendMessage(tab.id, {
+      type: "SHOW_RESULT",
+      payload: { text: summary, context: "link_check" },
+    }).catch(() => {}); // tab may not have content script
   }
 
   if (info.menuItemId === "analyzeSelection") {
