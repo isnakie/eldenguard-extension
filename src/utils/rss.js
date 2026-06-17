@@ -5,10 +5,6 @@
 const FTC_FEEDS = [
   {
     label: 'Consumer Alerts',
-    url: 'https://consumer.ftc.gov/consumer-alerts/rss',
-  },
-  {
-    label: 'FTC Blog',
     url: 'https://consumer.ftc.gov/blog/rss',
   },
 ];
@@ -16,24 +12,104 @@ const FTC_FEEDS = [
 const CACHE_KEY = 'ftc_scam_alerts_cache';
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
+/** Decode common HTML entities in a string. */
+function decodeEntities(str) {
+  return str
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'");
+}
+
+/**
+ * Extract the text content of the first matching XML tag.
+ * Handles: plain text, CDATA, and raw/encoded HTML anchor tags inside the value.
+ * Works in service worker context (no DOMParser available).
+ */
+function extractTag(block, tag) {
+  const m = block.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i'));
+  if (!m) return '';
+  let content = m[1].trim();
+
+  // Strip CDATA wrapper
+  const cdata = content.match(/^<!\[CDATA\[([\s\S]*?)\]\]>$/);
+  if (cdata) content = cdata[1].trim();
+
+  // FTC embeds raw <a> tags inside <title> — extract the anchor text
+  const rawAnchor = content.match(/<a[^>]*>([\s\S]*?)<\/a>/i);
+  if (rawAnchor) return rawAnchor[1].trim();
+
+  // FTC also HTML-encodes anchor tags inside field values — decode then extract
+  const decoded = decodeEntities(content);
+  const encodedAnchor = decoded.match(/<a[^>]*>([\s\S]*?)<\/a>/i);
+  if (encodedAnchor) return encodedAnchor[1].trim();
+
+  return decoded;
+}
+
+/**
+ * Extract a URL from an RSS item block.
+ * The FTC feed embeds the real URL as an href inside the <link> content,
+ * sometimes without a closing </link> tag. Decode the whole block and grab
+ * the first href="https://..." value that looks like a real article path.
+ */
+function extractLink(block) {
+  const decoded = decodeEntities(block);
+
+  // Find all href="https://..." values in the block (handles encoded or raw anchors)
+  const hrefRegex = /href="(https?:\/\/[^"]+)"/gi;
+  let match;
+  while ((match = hrefRegex.exec(decoded)) !== null) {
+    const url = match[1];
+    // Skip bare domain roots — real articles have a path beyond the hostname
+    if (new URL(url).pathname.length > 1) return url;
+  }
+
+  // Atom-style <link href="..."/> or plain URL in <link>...</link>
+  const atomAttr = block.match(/<link[^>]+href="(https?:\/\/[^"]+)"/i);
+  if (atomAttr) return atomAttr[1];
+
+  const plainLink = block.match(/<link[^>]*>\s*(https?:\/\/[^\s<]+)/i);
+  if (plainLink) return plainLink[1];
+
+  return '';
+}
+
 /**
  * Parse an RSS XML string into a flat array of alert objects.
+ * Uses regex instead of DOMParser so it works in service worker context.
  * @param {string} xml
  * @param {string} feedLabel
  * @returns {{ title: string, link: string, pubDate: string, description: string, source: string }[]}
  */
-function parseRSS(xml, feedLabel) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(xml, 'application/xml');
-  const items = Array.from(doc.querySelectorAll('item'));
+/** Extract the href from the <a> tag inside a <title> element, if present. */
+function extractTitleHref(block) {
+  const titleMatch = block.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  if (!titleMatch) return '';
+  const content = titleMatch[1].trim();
+  const hrefMatch = content.match(/href="(https?:\/\/[^"]+)"/i);
+  return hrefMatch ? hrefMatch[1] : '';
+}
 
-  return items.map((item) => ({
-    title: item.querySelector('title')?.textContent?.trim() ?? '(no title)',
-    link: item.querySelector('link')?.textContent?.trim() ?? '',
-    pubDate: item.querySelector('pubDate')?.textContent?.trim() ?? '',
-    description: item.querySelector('description')?.textContent?.trim() ?? '',
-    source: feedLabel,
-  }));
+function parseRSS(xml, feedLabel) {
+  const items = [];
+  const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
+  let match;
+  while ((match = itemRegex.exec(xml)) !== null) {
+    const block = match[1];
+    // FTC embeds the real article URL as the href inside <title>'s <a> tag
+    const link = extractTitleHref(block) || extractLink(block);
+    items.push({
+      title:       extractTag(block, 'title') || '(no title)',
+      link,
+      pubDate:     extractTag(block, 'pubDate'),
+      description: extractTag(block, 'description'),
+      source:      feedLabel,
+    });
+  }
+  return items;
 }
 
 /**
@@ -65,6 +141,13 @@ export async function getScamAlerts() {
 
   // Fetch all feeds; skip any that fail so one bad feed doesn't break everything
   const results = await Promise.allSettled(FTC_FEEDS.map(fetchFeed));
+  results.forEach((r, i) => {
+    if (r.status === 'rejected') {
+      console.error(`[EldenGuard] RSS fetch failed for "${FTC_FEEDS[i].label}" (${FTC_FEEDS[i].url}):`, r.reason);
+    } else {
+      console.log(`[EldenGuard] RSS "${FTC_FEEDS[i].label}": ${r.value.length} items fetched.`);
+    }
+  });
   const alerts = results
     .flatMap((r) => (r.status === 'fulfilled' ? r.value : []))
     .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
@@ -81,6 +164,13 @@ export async function getScamAlerts() {
  */
 export async function refreshScamAlertsCache() {
   const results = await Promise.allSettled(FTC_FEEDS.map(fetchFeed));
+  results.forEach((r, i) => {
+    if (r.status === 'rejected') {
+      console.error(`[EldenGuard] RSS fetch failed for "${FTC_FEEDS[i].label}" (${FTC_FEEDS[i].url}):`, r.reason);
+    } else {
+      console.log(`[EldenGuard] RSS "${FTC_FEEDS[i].label}": ${r.value.length} items fetched.`);
+    }
+  });
   const alerts = results
     .flatMap((r) => (r.status === 'fulfilled' ? r.value : []))
     .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))

@@ -3,14 +3,12 @@
 
 import { checkUrlSafety } from "../utils/safety.js";
 import { callEldenGuardAPI } from "../utils/api.js";
-import { getScamAlerts, refreshScamAlertsCache } from "../utils/rss.js";
+import { refreshScamAlertsCache } from "../utils/rss.js";
 
 // CONTEXT MENUS + ALARM SETUP
 chrome.runtime.onInstalled.addListener(() => {
   // Refresh FTC RSS feed every hour in the background
   chrome.alarms.create('refreshScamAlerts', { periodInMinutes: 60 });
-  // Prime the cache on install
-  refreshScamAlertsCache().catch(console.error);
 
   chrome.contextMenus.create({
     id: "analyzeLink",
@@ -109,13 +107,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "CHECK_URL") {
     checkUrlSafety(message.payload.url)
       .then((result) => sendResponse({ success: true, result }))
-      .catch((err) => sendResponse({ success: false, error: err.message }));
-    return true;
-  }
-
-  if (message.type === "GET_SCAM_ALERTS") {
-    getScamAlerts()
-      .then((data) => sendResponse({ success: true, alerts: data.alerts, fetchedAt: data.fetchedAt }))
       .catch((err) => sendResponse({ success: false, error: err.message }));
     return true;
   }

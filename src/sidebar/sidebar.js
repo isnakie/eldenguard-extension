@@ -1,4 +1,5 @@
 // ─── EldenGuard Sidebar Script ───────────────────────────────────────────────
+import { getScamAlerts } from '../utils/rss.js';
 
 let currentUrl = "";
 let pendingScreenshot = null;
@@ -125,16 +126,16 @@ document.getElementById("btn-close-alerts").addEventListener("click", () => {
 function loadScamAlerts() {
   alertsList.innerHTML = '<p class="alerts-panel__loading">Loading alerts...</p>';
 
-  chrome.runtime.sendMessage({ type: "GET_SCAM_ALERTS" }, (response) => {
-    if (!response?.success || !response.alerts?.length) {
+  getScamAlerts().then((data) => {
+    if (!data?.alerts?.length) {
       alertsList.innerHTML = '<p class="alerts-panel__loading">Could not load alerts. Try again later.</p>';
       return;
     }
 
-    const fetchedDate = new Date(response.fetchedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const fetchedDate = new Date(data.fetchedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     alertsList.innerHTML = '';
 
-    response.alerts.forEach((alert) => {
+    data.alerts.forEach((alert) => {
       const item = document.createElement("a");
       item.className = "alert-item";
       item.href = alert.link;
@@ -155,6 +156,8 @@ function loadScamAlerts() {
     meta.className = "alerts-panel__updated";
     meta.textContent = `Last updated: ${fetchedDate}`;
     alertsList.appendChild(meta);
+  }).catch(() => {
+    alertsList.innerHTML = '<p class="alerts-panel__loading">Could not load alerts. Try again later.</p>';
   });
 }
 
