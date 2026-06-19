@@ -1,4 +1,4 @@
-// EldenGuard Safety Checker
+// WiseOwl Safety Checker
 // Uses a backend Safe Browsing proxy plus local heuristics to verify URLs.
 
 import { BACKEND_SAFE_BROWSING_URL } from './config.js';

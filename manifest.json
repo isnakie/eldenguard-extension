@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "EldenGuard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Your friendly browser safety co-pilot protecting you from scams and unsafe websites.",
 
   "permissions": [
@@ -9,7 +9,8 @@
     "scripting",
     "storage",
     "tabs",
-    "contextMenus"
+    "contextMenus",
+    "alarms"
   ],
 
   "host_permissions": [

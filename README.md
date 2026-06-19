@@ -1,16 +1,17 @@
-# EldenGuard
+# WiseOwl
 
 AI-assisted browser safety co-pilot designed to help elderly and non-technical users browse the web more safely.
 
 ## Overview
 
-EldenGuard is a Chrome Extension project focused on improving online safety and accessibility for elderly internet users.
+WiseOwl is a Chrome Extension project focused on improving online safety and accessibility for elderly internet users.
 
 The extension provides:
 - Real-time website safety analysis
 - Scam and phishing detection
 - AI-assisted explanations of suspicious content
 - Simplified security guidance
+- Live FTC consumer scam alert feed
 - Accessibility-focused browser assistance
 
 The project is designed around a lightweight browser-extension architecture using Chrome Manifest V3.
@@ -30,11 +31,16 @@ The project is designed around a lightweight browser-extension architecture usin
 - Suspicious domain pattern detection
 - Safe-domain allowlisting
 
-## AI Assistant (Mock Demo)
-- Simulated AI responses
+## AI Assistant (LM Studio — Local)
+- Powered by LM Studio local server
 - Website explanation assistance
 - Scam/phishing guidance
 - Context-aware quick actions
+
+## FTC Scam Alert Feed
+- Pulls live consumer alerts from the FTC RSS feed (`consumer.ftc.gov`)
+- Cached locally with a 1-hour TTL, refreshed hourly in the background
+- Displayed as a browsable panel inside the sidebar
 
 ## Accessibility Features
 - Large readable interface
@@ -53,7 +59,7 @@ The project is designed around a lightweight browser-extension architecture usin
 # Project Architecture
 
 ```text
-eldenguard-extension/
+wiseowl-extension/
 ├── assets/
 │   └── icons/
 ├── src/
@@ -70,6 +76,7 @@ eldenguard-extension/
 │   │   └── sidebar.js
 │   └── utils/
 │       ├── api.js
+│       ├── rss.js
 │       └── safety.js
 ├── manifest.json
 ├── README.md
@@ -91,7 +98,7 @@ User Opens Sidebar Assistant
     ↓
 Messages Routed Through Service Worker
     ↓
-AI/Mock API Generates Response
+AI (LM Studio) Generates Response
     ↓
 Response Displayed In Sidebar
 ```
@@ -103,18 +110,22 @@ Response Displayed In Sidebar
 ## Frontend
 - HTML5
 - CSS3
-- JavaScript (ES6)
+- JavaScript (ES6 Modules)
 
 ## Browser Extension
 - Chrome Extension Manifest V3
 
-## Planned Backend (If AWS Credits awarded)
-- AWS Lambda
-- AWS API Gateway
-- Amazon Bedrock / Claude API
+## AI (Local Development)
+- LM Studio (local server, port 1234)
+- Compatible with any model loaded in LM Studio
+
+## Backend
+- Google Cloud Run (Node.js/Express proxy, see `backend/`)
+- Google Safe Browsing API
 
 ## Security APIs
-- Google Safe Browsing API (planned)
+- Google Safe Browsing API (live, via Cloud Run backend proxy)
+- FTC Consumer Alerts RSS Feed (live)
 
 ## Local Backend Proxy
 - `backend/server.js` provides a secure proxy for Google Safe Browsing
@@ -171,22 +182,27 @@ Click:
 
 Select the project root folder.
 
+## 4. Start LM Studio (for AI features)
+
+1. Open LM Studio
+2. Load any compatible model
+3. Go to the **Local Server** tab and click **Start Server**
+4. Server runs on `http://localhost:1234` by default
+
 ---
 
-# Current Demo Status
+# Current Status
 
 The current version uses:
-- mock AI responses
-- local heuristic scanning
-- simulated safety analysis
-
-This allows frontend and extension development without requiring cloud infrastructure deployment.
+- LM Studio for local AI responses
+- Local heuristic scanning for URL safety
+- Live FTC RSS feed for scam alerts
+- Google Safe Browsing API, checked through a Cloud Run backend proxy (see `backend/`)
 
 ---
 
 # Planned Future Features
 
-- Real LLM integration
 - Voice assistance
 - OCR / screenshot analysis
 - Live phishing classification
@@ -203,6 +219,7 @@ This allows frontend and extension development without requiring cloud infrastru
 - Content script styles are namespace-prefixed to avoid collisions
 - No sensitive API keys stored client-side
 - Uses Chrome extension storage APIs instead of localStorage
+- RSS data cached locally; no user data sent to external services
 
 ---
 
@@ -214,7 +231,7 @@ This allows frontend and extension development without requiring cloud infrastru
 | AI Integration | API routing and LLM integration |
 | Security Logic | URL heuristics and phishing detection |
 | UI/UX | Accessibility-focused interface design |
-| Cloud Backend | AWS Lambda and Bedrock integration |
+| Cloud Backend | Google Cloud Run and Safe Browsing API integration |
 
 ---
 
@@ -226,8 +243,8 @@ This project is developed as part of UC Berkeley's MICS capstone project and is 
 
 # Contributors
 
-- Greg Jaboin 
-- Greg Zhang 
+- Greg Jaboin
+- Greg Zhang
 - Sean Sjahrial
 
 ---

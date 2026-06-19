@@ -1,8 +1,9 @@
-// EldenGuard Background Service Worker - DEMO VERSION
-// Handles: Mock API calls, URL safety checks, context menus, and message routing.
+// EldenGuard Background Service Worker
+// Handles: API calls, URL safety checks, context menus, RSS feed refresh, and message routing.
 
 import { checkUrlSafety } from "../utils/safety.js";
 import { callEldenGuardAPI } from "../utils/api.js";
+import { refreshScamAlertsCache } from "../utils/rss.js";
 
 // PLAIN-LANGUAGE SAFETY MESSAGES
 // Keeps technical details (source, googleStatus, threatMatches, raw responses) out of
@@ -68,7 +69,7 @@ function createContextMenus() {
 
     chrome.contextMenus.create({
       id: "analyzeSelection",
-      title: "Ask EldenGuard about this",
+      title: "Ask WiseOwl about this",
       contexts: ["selection"],
     });
 
@@ -80,22 +81,41 @@ chrome.runtime.onInstalled.addListener(createContextMenus);
 chrome.runtime.onStartup.addListener(createContextMenus);
 createContextMenus();
 
+// Refresh FTC RSS feed every hour in the background
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.alarms.create('refreshScamAlerts', { periodInMinutes: 60 });
+});
+
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "wiseowlCheckLink") {
     try {
       const result = await checkUrlSafety(info.linkUrl);
       console.log("WiseOwl link check result:", result);
 
+      let message = formatChatMessage(result, info.linkUrl);
+
+      // Bonus: append a short plain-language explanation from LM Studio if it's running.
+      // Silently skipped if LM Studio isn't available - the message above is already complete.
+      try {
+        const prompt = result.isThreat
+          ? `This URL was flagged as potentially unsafe: ${info.linkUrl}. In 1-2 plain sentences, explain the risk to a non-technical user.`
+          : `Briefly assess this URL in 1-2 plain sentences for a non-technical user: ${info.linkUrl}`;
+        const llmText = await callEldenGuardAPI({ message: prompt, url: info.linkUrl });
+        if (llmText) message += `\n\n${llmText}`;
+      } catch {
+        // LM Studio unavailable - plain-language message above is still shown
+      }
+
       chrome.tabs.sendMessage(tab.id, {
         type: "SHOW_RESULT",
-        payload: { text: formatChatMessage(result, info.linkUrl), context: "link_check" },
-      });
+        payload: { text: message, context: "link_check" },
+      }).catch(() => {}); // tab may not have content script
     } catch (error) {
       console.error("WiseOwl link check error:", error.message);
       chrome.tabs.sendMessage(tab.id, {
         type: "SHOW_RESULT",
         payload: { text: "WiseOwl couldn't check this link right now. Please try again in a moment." },
-      });
+      }).catch(() => {});
     }
   }
 
@@ -141,6 +161,13 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     }
   } else {
     chrome.action.setBadgeText({ tabId, text: "" });
+  }
+});
+
+// ALARM HANDLER
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'refreshScamAlerts') {
+    refreshScamAlertsCache().catch(console.error);
   }
 });
 
