@@ -116,6 +116,33 @@ Response Displayed In Sidebar
 ## Security APIs
 - Google Safe Browsing API (planned)
 
+## Local Backend Proxy
+- `backend/server.js` provides a secure proxy for Google Safe Browsing
+- Store `SAFE_BROWSING_API_KEY` on the server, never in extension code
+- Run the backend locally with `npm install` and `npm start`
+- The extension forwards URL checks to `http://localhost:3000/api/check-url` while testing
+
+## Deployment to Google Cloud Run
+1. Install and authenticate the Google Cloud SDK.
+2. Enable the Cloud Run, Cloud Build, and Secret Manager APIs.
+3. In `backend/.env`, set `SAFE_BROWSING_API_KEY`.
+4. Run:
+   ```bash
+   cd backend
+   npm install
+   chmod +x deploy.sh
+   export SAFE_BROWSING_API_KEY="your_key_here"
+   ./deploy.sh YOUR_GCP_PROJECT_ID
+   ```
+5. After deploy, update `src/utils/config.js` with your deployed Cloud Run URL:
+   ```js
+   export const BACKEND_SAFE_BROWSING_URL = 'https://<YOUR_SERVICE_ID>-<REGION>.a.run.app/api/check-url';
+   ```
+
+## Notes
+- Use a production domain or Cloud Run URL in `src/utils/config.js`.
+- Never commit `backend/.env` or the actual API key to source control.
+
 ---
 
 # Installation

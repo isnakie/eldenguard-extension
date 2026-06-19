@@ -5,35 +5,57 @@ import { checkUrlSafety } from "../utils/safety.js";
 import { callEldenGuardAPI } from "../utils/api.js";
 
 // CONTEXT MENUS
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({
-    id: "analyzeLink",
-    title: "Check this link with EldenGuard",
-    contexts: ["link"],
-  });
+function createContextMenus() {
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: "wiseowlCheckLink",
+      title: "Check this link with WiseOwl",
+      contexts: ["link"],
+    });
 
-  chrome.contextMenus.create({
-    id: "analyzeSelection",
-    title: "Ask EldenGuard about this",
-    contexts: ["selection"],
-  });
+    chrome.contextMenus.create({
+      id: "analyzeSelection",
+      title: "Ask EldenGuard about this",
+      contexts: ["selection"],
+    });
 
-  console.log("EldenGuard installed and context menus registered.");
-});
+    console.log("EldenGuard context menus created.");
+  });
+}
+
+chrome.runtime.onInstalled.addListener(createContextMenus);
+chrome.runtime.onStartup.addListener(createContextMenus);
+createContextMenus();
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  if (info.menuItemId === "analyzeLink") {
+  if (info.menuItemId === "wiseowlCheckLink") {
     try {
-      const result = await callEldenGuardAPI({
-        message: `Is this link safe? Explain in simple terms: ${info.linkUrl}`,
-        url: info.linkUrl,
-      });
+      const result = await checkUrlSafety(info.linkUrl);
+      const googleStatus = result.googleChecked
+        ? `Google Safe Browsing check ${result.googleStatus}${result.googleError ? ` (${result.googleError})` : ''}`
+        : 'Google Safe Browsing was not checked.';
+
+      let message;
+      if (result.source === 'google_safe_browsing') {
+        message = result.isThreat
+          ? `WiseOwl says this link may be unsafe according to Google Safe Browsing.\n- Threat type: ${result.threatType || 'unknown'}\n- Platform: ${result.platformType || 'ANY_PLATFORM'}\n- ${result.reason}\n- Source: ${result.source}\n${info.linkUrl}`
+          : `WiseOwl says this link appears safe according to Google Safe Browsing.\n- ${result.reason}\n- Source: ${result.source}\n${info.linkUrl}`;
+      } else {
+        message = result.isThreat
+          ? `WiseOwl says this link may be unsafe.\n- ${result.reason}\n- ${googleStatus}\n- Source: ${result.source}\n${info.linkUrl}`
+          : `WiseOwl says this link appears safe.\n- ${result.reason}\n- ${googleStatus}\n- Source: ${result.source}\n${info.linkUrl}`;
+      }
+
       chrome.tabs.sendMessage(tab.id, {
         type: "SHOW_RESULT",
-        payload: { text: result, context: "link_check" },
+        payload: { text: message, context: "link_check" },
       });
     } catch (error) {
-      console.error("EldenGuard API error:", error.message);
+      console.error("WiseOwl link check error:", error.message);
+      chrome.tabs.sendMessage(tab.id, {
+        type: "SHOW_RESULT",
+        payload: { text: `WiseOwl could not check that link: ${error.message}` },
+      });
     }
   }
 

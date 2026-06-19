@@ -1,5 +1,7 @@
-// EldenGuard Safety Checker - MOCK VERSION FOR DEMO
-// This version works without Google Safe Browsing API for demo purposes
+// EldenGuard Safety Checker
+// Uses a backend Safe Browsing proxy plus local heuristics to verify URLs.
+
+import { BACKEND_SAFE_BROWSING_URL } from './config.js';
 
 // Patterns commonly found in elder-targeted scam URLs
 const SCAM_HEURISTICS = [
@@ -17,7 +19,7 @@ const SCAM_HEURISTICS = [
 
 // Domains that frequently impersonate trusted services
 const SUSPICIOUS_TLD_PATTERNS = [
-  /paypal\.(?!com)/i,      // paypal.net, paypal.org fakes
+  /paypal\.(?!com)/i,
   /amazon\.(?!com|co)/i,
   /microsoft\.(?!com)/i,
   /apple\.(?!com)/i,
@@ -35,62 +37,114 @@ const SAFE_DOMAINS = [
   'apple.com'
 ];
 
+async function querySafeBrowsingBackend(url) {
+  console.log(`WiseOwl safe browsing backend request: ${url}`);
+
+  const response = await fetch(BACKEND_SAFE_BROWSING_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url })
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    const errorMessage = data?.error || `Backend Safe Browsing error ${response.status}: ${response.statusText}`;
+    throw new Error(errorMessage);
+  }
+
+  console.log('WiseOwl Safe Browsing backend response:', data);
+  return data;
+}
+
 /**
- * Check a URL for safety using local heuristics only (no API needed for demo)
+ * Check a URL for safety using Google Safe Browsing and local heuristics.
  * @param {string} url
  * @returns {Promise<{isThreat: boolean, reason: string, source: string}>}
  */
 export async function checkUrlSafety(url) {
-  // Simulate async check
-  await new Promise(resolve => setTimeout(resolve, 100));
-
   try {
     const urlObj = new URL(url);
     const hostname = urlObj.hostname.toLowerCase();
 
-    // Check if it's a known safe domain
+    // Quick local whitelist first
     if (SAFE_DOMAINS.some(domain => hostname.includes(domain))) {
       return {
         isThreat: false,
-        reason: "",
-        source: "local_whitelist"
+        reason: 'Known safe domain.',
+        source: 'local_whitelist',
+        googleChecked: false,
+        googleStatus: 'skipped',
+        googleError: null,
+        googleResponse: null
       };
     }
 
-    // Check for scam patterns in URL
+    // Use backend proxy for Google Safe Browsing
+    let googleInfo = {
+      googleChecked: false,
+      googleStatus: 'skipped',
+      googleError: null,
+      googleResponse: null
+    };
+
+    try {
+      const apiResult = await querySafeBrowsingBackend(url);
+      googleInfo = {
+        googleChecked: true,
+        googleStatus: 'success',
+        googleError: null,
+        googleResponse: apiResult.rawResponse,
+        threatMatches: apiResult.threatMatches || []
+      };
+      // Google flagged it directly - no need to also run local heuristics
+      if (apiResult.isThreat) {
+        return { ...apiResult, ...googleInfo };
+      }
+    } catch (googleErr) {
+      googleInfo = {
+        googleChecked: true,
+        googleStatus: 'failed',
+        googleError: googleErr.message,
+        googleResponse: null
+      };
+      console.warn('Safe Browsing backend failed, falling back to local heuristics:', googleErr.message);
+    }
+
+    // Local heuristics: run when the backend is unavailable, errors, or found no threat
     for (const pattern of SCAM_HEURISTICS) {
       if (pattern.test(url)) {
         return {
           isThreat: true,
-          reason: "This URL contains patterns commonly used in scam websites.",
-          source: "local_heuristic"
+          reason: 'This URL contains patterns commonly used in scam websites.',
+          source: 'local_heuristic',
+          ...googleInfo
         };
       }
     }
 
-    // Check for suspicious domain patterns
     for (const pattern of SUSPICIOUS_TLD_PATTERNS) {
       if (pattern.test(hostname)) {
         return {
           isThreat: true,
-          reason: "This site may be impersonating a trusted brand.",
-          source: "local_heuristic"
+          reason: 'This site may be impersonating a trusted brand.',
+          source: 'local_heuristic',
+          ...googleInfo
         };
       }
     }
 
-    // Default to safe for demo
     return {
       isThreat: false,
-      reason: "",
-      source: "local_check"
+      reason: 'No threats detected by Safe Browsing or local heuristics.',
+      source: 'combined_check',
+      ...googleInfo
     };
   } catch (err) {
-    console.error("URL safety check error:", err);
+    console.error('URL safety check error:', err);
     return {
       isThreat: false,
-      reason: "",
-      source: "error"
+      reason: 'Could not evaluate this URL safely.',
+      source: 'error'
     };
   }
 }
