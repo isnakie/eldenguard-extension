@@ -4,6 +4,59 @@
 import { checkUrlSafety } from "../utils/safety.js";
 import { callEldenGuardAPI } from "../utils/api.js";
 
+// PLAIN-LANGUAGE SAFETY MESSAGES
+// Keeps technical details (source, googleStatus, threatMatches, raw responses) out of
+// what's shown to users - those stay in console.log for debugging. Users only see a
+// short headline, one concrete reason, and what to do about it.
+const THREAT_TYPE_EXPLANATIONS = {
+  MALWARE: "Google has found that this site can install harmful software on your device.",
+  SOCIAL_ENGINEERING: "Google has found that this site tries to trick people into giving away personal information, like a phishing or scam page.",
+  UNWANTED_SOFTWARE: "Google has found that this site installs unwanted programs.",
+  POTENTIALLY_HARMFUL_APPLICATION: "Google has found that this site may be harmful to use.",
+};
+
+function describeSafetyResult(result) {
+  if (!result.isThreat) {
+    let reason = "Nothing suspicious turned up when we checked it.";
+    if (result.source === "local_whitelist") {
+      reason = "This is a well-known, trusted website.";
+    } else if (result.source === "google_safe_browsing") {
+      reason = "We checked it against Google's list of dangerous websites and found nothing wrong.";
+    } else if (result.source === "error") {
+      reason = "We weren't able to check this link right now.";
+    }
+    return {
+      headline: "✅ This link looks safe",
+      reason,
+      advice: "It looks okay to visit. As always, be cautious if a site asks for personal or financial information.",
+    };
+  }
+
+  let reason = "This link uses wording often seen in scam messages, like urgent account warnings or fake prizes.";
+  if (result.source === "google_safe_browsing") {
+    const threatType = result.threatMatches?.[0]?.threatType;
+    reason = THREAT_TYPE_EXPLANATIONS[threatType] || "Google has flagged this site as dangerous.";
+  } else if (result.reason?.includes("impersonating")) {
+    reason = "The web address copies a trusted company's name, but it isn't that company's real website.";
+  }
+
+  return {
+    headline: "⚠️ This link may not be safe",
+    reason,
+    advice: "We recommend not clicking this link or entering any personal information on it.",
+  };
+}
+
+function formatChatMessage(result, url) {
+  const { headline, reason, advice } = describeSafetyResult(result);
+  return `${headline}\n\n${reason}\n\n${advice}\n\nLink checked: ${url}`;
+}
+
+function formatAlertMessage(result) {
+  const { headline, reason } = describeSafetyResult(result);
+  return `${headline}. ${reason}`;
+}
+
 // CONTEXT MENUS
 function createContextMenus() {
   chrome.contextMenus.removeAll(() => {
@@ -31,30 +84,17 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "wiseowlCheckLink") {
     try {
       const result = await checkUrlSafety(info.linkUrl);
-      const googleStatus = result.googleChecked
-        ? `Google Safe Browsing check ${result.googleStatus}${result.googleError ? ` (${result.googleError})` : ''}`
-        : 'Google Safe Browsing was not checked.';
-
-      let message;
-      if (result.source === 'google_safe_browsing') {
-        message = result.isThreat
-          ? `WiseOwl says this link may be unsafe according to Google Safe Browsing.\n- Threat type: ${result.threatType || 'unknown'}\n- Platform: ${result.platformType || 'ANY_PLATFORM'}\n- ${result.reason}\n- Source: ${result.source}\n${info.linkUrl}`
-          : `WiseOwl says this link appears safe according to Google Safe Browsing.\n- ${result.reason}\n- Source: ${result.source}\n${info.linkUrl}`;
-      } else {
-        message = result.isThreat
-          ? `WiseOwl says this link may be unsafe.\n- ${result.reason}\n- ${googleStatus}\n- Source: ${result.source}\n${info.linkUrl}`
-          : `WiseOwl says this link appears safe.\n- ${result.reason}\n- ${googleStatus}\n- Source: ${result.source}\n${info.linkUrl}`;
-      }
+      console.log("WiseOwl link check result:", result);
 
       chrome.tabs.sendMessage(tab.id, {
         type: "SHOW_RESULT",
-        payload: { text: message, context: "link_check" },
+        payload: { text: formatChatMessage(result, info.linkUrl), context: "link_check" },
       });
     } catch (error) {
       console.error("WiseOwl link check error:", error.message);
       chrome.tabs.sendMessage(tab.id, {
         type: "SHOW_RESULT",
-        payload: { text: `WiseOwl could not check that link: ${error.message}` },
+        payload: { text: "WiseOwl couldn't check this link right now. Please try again in a moment." },
       });
     }
   }
@@ -81,6 +121,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (tab.url.startsWith("chrome://") || tab.url.startsWith("about:") || tab.url.startsWith("edge://")) return;
 
   const safetyResult = await checkUrlSafety(tab.url);
+  console.log("WiseOwl page check result:", safetyResult);
 
   if (safetyResult.isThreat) {
     // Alert the content script to show a warning banner
@@ -89,7 +130,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
         type: "SHOW_ALERT",
         payload: {
           level: "danger",
-          message: `EldenGuard Warning: This site may be unsafe. ${safetyResult.reason}`,
+          message: formatAlertMessage(safetyResult),
         },
       });
       // Update the extension badge
