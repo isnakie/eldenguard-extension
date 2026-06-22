@@ -29,11 +29,11 @@ function createAvatar() {
       <!-- Eyes -->
       <circle cx="13" cy="14" r="4.5" fill="#CADCFC"/>
       <circle cx="13" cy="14" r="3" fill="#00A896"/>
-      <circle cx="13" cy="14" r="1.5" fill="#062A52"/>
+      <circle id="eldenguard-pupil-left" cx="13" cy="14" r="1.5" fill="#062A52"/>
       <circle cx="14" cy="13" r="0.8" fill="white"/>
       <circle cx="23" cy="14" r="4.5" fill="#CADCFC"/>
       <circle cx="23" cy="14" r="3" fill="#00A896"/>
-      <circle cx="23" cy="14" r="1.5" fill="#062A52"/>
+      <circle id="eldenguard-pupil-right" cx="23" cy="14" r="1.5" fill="#062A52"/>
       <circle cx="24" cy="13" r="0.8" fill="white"/>
       <!-- Beak -->
       <path d="M15 19 L18 22 L21 19 Q18 17 15 19Z" fill="#F5A623"/>
@@ -46,6 +46,50 @@ function createAvatar() {
   avatarBtn.addEventListener("click", toggleSidebar);
   document.body.appendChild(avatarBtn);
 }
+
+// EYE TRACKING — pupils follow the cursor within a small radius so the owl feels alive
+const EYE_MAX_OFFSET = 1.4; // stay inside the iris (r=3) so pupils never poke out
+const EYES = [
+  { id: "eldenguard-pupil-left", baseX: 13, baseY: 14 },
+  { id: "eldenguard-pupil-right", baseX: 23, baseY: 14 },
+];
+
+let lastMouseX = 0;
+let lastMouseY = 0;
+let eyeTrackingScheduled = false;
+
+function updateEyeTracking() {
+  eyeTrackingScheduled = false;
+  if (!avatarBtn) return;
+
+  const rect = avatarBtn.getBoundingClientRect();
+  if (rect.width === 0) return; // avatar not visible/laid out yet
+
+  EYES.forEach(({ id, baseX, baseY }) => {
+    const pupil = document.getElementById(id);
+    if (!pupil) return;
+
+    // Convert the eye's position in the 36x36 SVG viewBox to viewport coordinates
+    const eyeViewportX = rect.left + (baseX / 36) * rect.width;
+    const eyeViewportY = rect.top + (baseY / 36) * rect.height;
+
+    const dx = lastMouseX - eyeViewportX;
+    const dy = lastMouseY - eyeViewportY;
+    const distance = Math.hypot(dx, dy) || 1;
+
+    pupil.setAttribute("cx", baseX + (dx / distance) * EYE_MAX_OFFSET);
+    pupil.setAttribute("cy", baseY + (dy / distance) * EYE_MAX_OFFSET);
+  });
+}
+
+document.addEventListener("mousemove", (e) => {
+  lastMouseX = e.clientX;
+  lastMouseY = e.clientY;
+  if (!eyeTrackingScheduled) {
+    eyeTrackingScheduled = true;
+    requestAnimationFrame(updateEyeTracking);
+  }
+});
 
 // SIDEBAR
 function createSidebar() {
