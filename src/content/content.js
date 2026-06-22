@@ -10,6 +10,10 @@ let sidebarFrame = null;
 let avatarBtn = null;
 let alertBanner = null;
 
+// FLAGGED LINK TRACKING (url -> [{ el, html }], so unlocking restores every
+// instance of a repeated link, e.g. the same scam URL in a header and footer)
+const flaggedLinkOriginals = new Map();
+
 // AVATAR BUTTON
 function createAvatar() {
   if (document.getElementById("eldenguard-avatar")) return;
@@ -105,6 +109,93 @@ function showAlertBanner(level, message) {
   }
 }
 
+// AUTO LINK SCANNING
+// Checks every external (cross-origin) link on the page against WiseOwl's safety
+// check, and visually flags any that come back as a threat. Same-site navigation
+// links are skipped to keep the number of checks reasonable.
+function flagLink(url, elements) {
+  const records = [];
+  elements.forEach((el) => {
+    if (el.classList.contains("eldenguard-flagged-link")) return;
+    records.push({ el, html: el.innerHTML });
+    el.classList.add("eldenguard-flagged-link");
+    el.setAttribute("aria-disabled", "true");
+    el.title = 'WiseOwl: This link may be unsafe. Right-click it and choose "Remove WiseOwl warning" to open it.';
+    el.textContent = "WiseOwl detected possible malicious link here";
+  });
+  if (records.length) flaggedLinkOriginals.set(url, records);
+}
+
+function unlockLink(url) {
+  const records = flaggedLinkOriginals.get(url);
+  if (!records) return;
+  records.forEach(({ el, html }) => {
+    el.innerHTML = html;
+    el.classList.remove("eldenguard-flagged-link");
+    el.removeAttribute("aria-disabled");
+    el.removeAttribute("title");
+  });
+  flaggedLinkOriginals.delete(url);
+}
+
+async function scanPageLinks() {
+  const linksByUrl = new Map();
+
+  document.querySelectorAll("a[href]").forEach((el) => {
+    let parsed;
+    try {
+      parsed = new URL(el.href);
+    } catch {
+      return;
+    }
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return;
+    if (parsed.origin === window.location.origin) return;
+
+    if (!linksByUrl.has(el.href)) linksByUrl.set(el.href, []);
+    linksByUrl.get(el.href).push(el);
+  });
+
+  const urls = Array.from(linksByUrl.keys());
+  if (!urls.length) return;
+
+  const CONCURRENCY = 4;
+  let nextIndex = 0;
+
+  async function worker() {
+    while (nextIndex < urls.length) {
+      const url = urls[nextIndex++];
+      try {
+        const response = await new Promise((resolve) => {
+          chrome.runtime.sendMessage({ type: "CHECK_URL", payload: { url } }, resolve);
+        });
+        if (response?.success && response.result?.isThreat) {
+          flagLink(url, linksByUrl.get(url));
+        }
+      } catch {
+        // Skip this link silently if the check fails
+      }
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, urls.length) }, worker));
+}
+
+// Block navigation on flagged links until the user unlocks them
+document.addEventListener(
+  "click",
+  (e) => {
+    const link = e.target.closest?.("a.eldenguard-flagged-link");
+    if (!link) return;
+    e.preventDefault();
+    e.stopPropagation();
+    showAlertBanner(
+      "warning",
+      'This link is flagged as a possible phishing link. Right-click it and choose "Remove WiseOwl warning" to open it.'
+    );
+  },
+  true
+);
+
 // SCREENSHOT / SCREEN GRAB
 // Captures the visible tab and sends it to the sidebar for analysis.
 async function captureScreenshot() {
@@ -124,6 +215,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.type === "SHOW_ALERT") {
     showAlertBanner(message.payload.level, message.payload.message);
+  }
+
+  if (message.type === "UNLOCK_LINK" && message.payload?.url) {
+    unlockLink(message.payload.url);
   }
 
   if (message.type === "SHOW_RESULT") {
@@ -152,3 +247,4 @@ window.addEventListener("message", async (event) => {
 
 // INIT
 createAvatar();
+scanPageLinks();

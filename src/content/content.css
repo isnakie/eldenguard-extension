@@ -124,3 +124,19 @@
 .eldenguard-alert__close:hover {
   opacity: 1;
 }
+
+/* ── Flagged link warnings ─────────────────────────────────────────────────── */
+a.eldenguard-flagged-link {
+  background: #FEE2E2 !important;
+  color: #991B1B !important;
+  border: 1px solid #DC2626 !important;
+  border-radius: 4px;
+  padding: 0 4px;
+  text-decoration: none !important;
+  cursor: not-allowed !important;
+  font-weight: 600;
+}
+
+a.eldenguard-flagged-link::before {
+  content: "⚠️ ";
+}

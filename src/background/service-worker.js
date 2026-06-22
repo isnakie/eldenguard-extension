@@ -68,6 +68,12 @@ function createContextMenus() {
     });
 
     chrome.contextMenus.create({
+      id: "wiseowlUnlockLink",
+      title: "Remove WiseOwl warning from this link",
+      contexts: ["link"],
+    });
+
+    chrome.contextMenus.create({
       id: "analyzeSelection",
       title: "Ask WiseOwl about this",
       contexts: ["selection"],
@@ -117,6 +123,13 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         payload: { text: "WiseOwl couldn't check this link right now. Please try again in a moment." },
       }).catch(() => {});
     }
+  }
+
+  if (info.menuItemId === "wiseowlUnlockLink") {
+    chrome.tabs.sendMessage(tab.id, {
+      type: "UNLOCK_LINK",
+      payload: { url: info.linkUrl },
+    }).catch(() => {}); // no-op if that link wasn't flagged or tab has no content script
   }
 
   if (info.menuItemId === "analyzeSelection") {
