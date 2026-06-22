@@ -13,12 +13,18 @@
   border: none;
   background: #062A52;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   padding: 0;
+}
+
+#eldenguard-avatar.dragging {
+  cursor: grabbing;
+  transition: none;
 }
 
 #eldenguard-avatar:hover {

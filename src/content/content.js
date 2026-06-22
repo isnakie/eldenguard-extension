@@ -32,13 +32,11 @@ function createAvatar() {
           <circle cx="13" cy="14" r="4.5" fill="#CADCFC"/>
           <circle cx="13" cy="14" r="3" fill="#00A896"/>
           <circle id="eldenguard-pupil-left" cx="13" cy="14" r="1.5" fill="#062A52"/>
-          <circle cx="14" cy="13" r="0.8" fill="white"/>
         </g>
         <g class="eldenguard-eye">
           <circle cx="23" cy="14" r="4.5" fill="#CADCFC"/>
           <circle cx="23" cy="14" r="3" fill="#00A896"/>
           <circle id="eldenguard-pupil-right" cx="23" cy="14" r="1.5" fill="#062A52"/>
-          <circle cx="24" cy="13" r="0.8" fill="white"/>
         </g>
         <!-- Beak -->
         <path d="M15 19 L18 22 L21 19 Q18 17 15 19Z" fill="#F5A623"/>
@@ -49,8 +47,105 @@ function createAvatar() {
     </svg>
   `;
 
-  avatarBtn.addEventListener("click", toggleSidebar);
+  avatarBtn.addEventListener("click", (e) => {
+    if (avatarBtn.dataset.suppressClick === "true") {
+      delete avatarBtn.dataset.suppressClick;
+      return;
+    }
+    toggleSidebar();
+  });
   document.body.appendChild(avatarBtn);
+
+  initAvatarDragging();
+  restoreAvatarPosition();
+}
+
+// DRAG TO REPOSITION
+// Position is saved to chrome.storage.local so the avatar stays where the
+// user put it across page loads and across every site they visit.
+const AVATAR_POSITION_KEY = "wiseowlAvatarPosition";
+const DRAG_THRESHOLD = 4; // px of movement before a click counts as a drag
+
+function clampAvatarPosition(left, top) {
+  const rect = avatarBtn.getBoundingClientRect();
+  const maxLeft = Math.max(window.innerWidth - rect.width, 0);
+  const maxTop = Math.max(window.innerHeight - rect.height, 0);
+  return {
+    left: Math.min(Math.max(left, 0), maxLeft),
+    top: Math.min(Math.max(top, 0), maxTop),
+  };
+}
+
+function applyAvatarPosition(left, top) {
+  avatarBtn.style.left = `${left}px`;
+  avatarBtn.style.top = `${top}px`;
+  avatarBtn.style.right = "auto";
+  avatarBtn.style.bottom = "auto";
+}
+
+function restoreAvatarPosition() {
+  chrome.storage.local.get([AVATAR_POSITION_KEY], (result) => {
+    const saved = result[AVATAR_POSITION_KEY];
+    if (!saved) return;
+    const { left, top } = clampAvatarPosition(saved.left, saved.top);
+    applyAvatarPosition(left, top);
+  });
+}
+
+function initAvatarDragging() {
+  let dragState = null;
+
+  avatarBtn.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return; // left click / primary touch only
+    const rect = avatarBtn.getBoundingClientRect();
+    dragState = {
+      startX: e.clientX,
+      startY: e.clientY,
+      originLeft: rect.left,
+      originTop: rect.top,
+      moved: false,
+    };
+    avatarBtn.setPointerCapture(e.pointerId);
+  });
+
+  avatarBtn.addEventListener("pointermove", (e) => {
+    if (!dragState) return;
+    const dx = e.clientX - dragState.startX;
+    const dy = e.clientY - dragState.startY;
+
+    if (!dragState.moved && Math.hypot(dx, dy) > DRAG_THRESHOLD) {
+      dragState.moved = true;
+      avatarBtn.classList.add("dragging");
+    }
+
+    if (dragState.moved) {
+      const { left, top } = clampAvatarPosition(dragState.originLeft + dx, dragState.originTop + dy);
+      applyAvatarPosition(left, top);
+    }
+  });
+
+  avatarBtn.addEventListener("pointerup", (e) => {
+    if (!dragState) return;
+    if (dragState.moved) {
+      avatarBtn.classList.remove("dragging");
+      const rect = avatarBtn.getBoundingClientRect();
+      chrome.storage.local.set({ [AVATAR_POSITION_KEY]: { left: rect.left, top: rect.top } });
+      // The browser still fires a "click" after pointerup even though the
+      // button moved under the cursor - suppress it so dragging doesn't
+      // also toggle the sidebar open.
+      avatarBtn.dataset.suppressClick = "true";
+    }
+    dragState = null;
+  });
+
+  // Keep the avatar on-screen if the window is resized after being dragged near an edge
+  window.addEventListener("resize", () => {
+    const rect = avatarBtn.getBoundingClientRect();
+    if (avatarBtn.style.left) {
+      const { left, top } = clampAvatarPosition(rect.left, rect.top);
+      applyAvatarPosition(left, top);
+    }
+  });
 }
 
 // EYE TRACKING — pupils follow the cursor within a small radius so the owl feels alive
