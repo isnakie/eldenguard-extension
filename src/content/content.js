@@ -138,6 +138,44 @@ function unlockLink(url) {
   flaggedLinkOriginals.delete(url);
 }
 
+// Some sites embed hidden/duplicate <a> elements (off-screen overlays, layout
+// helpers, "flip card" back-faces) that were never meant to display text.
+// Skip flagging those - a user can't click something they can't see, and
+// overwriting their content tends to pick up whatever odd styling (rotation,
+// mirroring, zero size) was hiding them.
+//
+// Walk up the ancestor chain looking for a transform that mirrors the element
+// on either axis. A negative `a` (horizontal scale) or `d` (vertical scale)
+// component reliably signals a mirror/flip no matter which CSS function
+// produced it - rotate(180deg), scaleX/Y(-1), and even 3D rotateX/Y(180deg)
+// (a common "flip card" trick) all project to a negative a and/or d.
+function hasFlippedAncestor(el) {
+  let node = el;
+  let depth = 0;
+  while (node && depth < 10) {
+    const t = getComputedStyle(node).transform;
+    if (t && t !== "none") {
+      try {
+        const m = new DOMMatrix(t);
+        if (m.a < -0.01 || m.d < -0.01) return true;
+      } catch {
+        // Unparsable transform value - ignore and keep walking up
+      }
+    }
+    node = node.parentElement;
+    depth++;
+  }
+  return false;
+}
+
+function isVisibleLink(el) {
+  const rect = el.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return false;
+  const style = getComputedStyle(el);
+  if (style.visibility === "hidden" || style.display === "none" || parseFloat(style.opacity) === 0) return false;
+  return !hasFlippedAncestor(el);
+}
+
 async function scanPageLinks() {
   const linksByUrl = new Map();
 
@@ -150,6 +188,7 @@ async function scanPageLinks() {
     }
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return;
     if (parsed.origin === window.location.origin) return;
+    if (!isVisibleLink(el)) return;
 
     if (!linksByUrl.has(el.href)) linksByUrl.set(el.href, []);
     linksByUrl.get(el.href).push(el);

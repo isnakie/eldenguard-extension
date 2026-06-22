@@ -135,6 +135,13 @@ a.eldenguard-flagged-link {
   text-decoration: none !important;
   cursor: not-allowed !important;
   font-weight: 600;
+  /* Neutralize any transform/writing-mode the host page applies to this
+     element (e.g. hidden/duplicate link elements some sites rotate or
+     mirror off-screen) so the warning always renders upright. */
+  transform: none !important;
+  writing-mode: horizontal-tb !important;
+  direction: ltr !important;
+  unicode-bidi: normal !important;
 }
 
 a.eldenguard-flagged-link::before {
