@@ -7,8 +7,8 @@
   bottom: 24px;
   right: 24px;
   z-index: 2147483646; /* max z-index - 1 */
-  width: 60px;
-  height: 60px;
+  width: 78px;
+  height: 78px;
   border-radius: 50%;
   border: none;
   background: #062A52;
@@ -29,6 +29,17 @@
 #eldenguard-avatar.active {
   background: #00A896;
   transform: scale(1.05);
+}
+
+/* Blinking eyes */
+#eldenguard-avatar .eldenguard-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.09s ease;
+}
+
+#eldenguard-avatar .eldenguard-eye.blinking {
+  transform: scaleY(0.08);
 }
 
 /* Pulse ring animation when a threat is detected */
