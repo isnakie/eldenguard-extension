@@ -43,30 +43,34 @@
       </fieldset>
 
       <fieldset class="question">
-        <legend>2. How comfortable are you with computers and technology?</legend>
-        <label class="option"><input type="radio" name="techLevel" value="beginner" required> Not very comfortable — I'd like things explained simply</label>
-        <label class="option"><input type="radio" name="techLevel" value="intermediate"> Somewhat comfortable</label>
-        <label class="option"><input type="radio" name="techLevel" value="advanced"> Very comfortable — I understand technical terms</label>
+        <legend id="q2-legend">2. How comfortable are you with computers and technology?</legend>
+        <label class="option"><input type="radio" name="techLevel" value="beginner" required> <span id="tech-beginner-label">Not very comfortable — I'd like things explained simply</span></label>
+        <label class="option"><input type="radio" name="techLevel" value="intermediate"> <span id="tech-intermediate-label">Somewhat comfortable</span></label>
+        <label class="option"><input type="radio" name="techLevel" value="advanced"> <span id="tech-advanced-label">Very comfortable — I understand technical terms</span></label>
       </fieldset>
 
       <fieldset class="question">
-        <legend>3. What worries you most online?</legend>
-        <label class="option"><input type="radio" name="topConcern" value="phishing_email" required> Suspicious emails or messages</label>
-        <label class="option"><input type="radio" name="topConcern" value="fake_shopping"> Fake shopping or payment sites</label>
-        <label class="option"><input type="radio" name="topConcern" value="tech_support_scams"> Fake "tech support" or pop-up warnings</label>
-        <label class="option"><input type="radio" name="topConcern" value="social_media_scams"> Scams on social media</label>
-        <label class="option"><input type="radio" name="topConcern" value="other"> Something else / not sure</label>
+        <legend id="q3-legend">3. What worries you most online? (Choose all that apply)</legend>
+        <label class="option"><input type="checkbox" name="topConcerns" value="phishing_email"> Suspicious emails, texts, or phone calls</label>
+        <label class="option"><input type="checkbox" name="topConcerns" value="fake_shopping"> Fake shopping or payment sites</label>
+        <label class="option"><input type="checkbox" name="topConcerns" value="tech_support_scams"> Fake "tech support" or pop-up warnings</label>
+        <label class="option"><input type="checkbox" name="topConcerns" value="social_media_scams"> Scams on social media</label>
+        <label class="option"><input type="checkbox" name="topConcerns" value="romance_scams"> Romance or relationship scams</label>
+        <label class="option"><input type="checkbox" name="topConcerns" value="government_imposter"> Fake IRS, Social Security, or Medicare messages</label>
+        <label class="option"><input type="checkbox" name="topConcerns" value="prize_lottery_scams"> Prize, lottery, or sweepstakes offers</label>
+        <label class="option"><input type="checkbox" name="topConcerns" value="fake_charity"> Fake charity requests</label>
+        <label class="option"><input type="checkbox" name="topConcerns" value="other"> Something else / not sure</label>
       </fieldset>
 
       <fieldset class="question">
-        <legend>4. How should WiseOwl explain things to you?</legend>
+        <legend id="q4-legend">4. How should WiseOwl explain things to you?</legend>
         <label class="option"><input type="radio" name="explanationStyle" value="simple_short" required> Very simple and short</label>
         <label class="option"><input type="radio" name="explanationStyle" value="normal"> Normal, everyday language</label>
         <label class="option"><input type="radio" name="explanationStyle" value="detailed"> Detailed, with technical reasons</label>
       </fieldset>
 
       <fieldset class="question">
-        <legend>5. Should WiseOwl warn you automatically, or only when you ask?</legend>
+        <legend id="q5-legend">5. Should WiseOwl warn you automatically, or only when you ask?</legend>
         <label class="option"><input type="radio" name="warningStyle" value="proactive" required> Warn me automatically about risky pages</label>
         <label class="option"><input type="radio" name="warningStyle" value="only_when_asked"> Only tell me when I ask</label>
       </fieldset>

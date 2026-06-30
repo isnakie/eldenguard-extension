@@ -23,23 +23,32 @@ Keep responses under 3 sentences unless the user asks for more detail.`;
 const PROFILE_OPTIONS = {
   userRole: ['self', 'caregiver_setup'],
   techLevel: ['beginner', 'intermediate', 'advanced'],
-  topConcern: ['phishing_email', 'fake_shopping', 'tech_support_scams', 'social_media_scams', 'other'],
   explanationStyle: ['simple_short', 'normal', 'detailed'],
   warningStyle: ['proactive', 'only_when_asked'],
 };
 
+const TOP_CONCERN_VALUES = [
+  'phishing_email', 'fake_shopping', 'tech_support_scams', 'social_media_scams',
+  'romance_scams', 'government_imposter', 'prize_lottery_scams', 'fake_charity', 'other',
+];
+
 const PROFILE_DESCRIPTIONS = {
   userRole: { self: 'the user themself', caregiver_setup: 'a trusted person setting this up on behalf of the primary user' },
   techLevel: { beginner: 'beginner — explain things simply, avoid jargon', intermediate: 'somewhat comfortable with technology', advanced: 'comfortable with technical terms' },
-  topConcern: {
-    phishing_email: 'suspicious emails or messages',
-    fake_shopping: 'fake shopping or payment sites',
-    tech_support_scams: 'fake tech support or pop-up warnings',
-    social_media_scams: 'scams on social media',
-    other: 'general online safety',
-  },
   explanationStyle: { simple_short: 'very simple and short', normal: 'normal, everyday language', detailed: 'detailed with technical reasons' },
   warningStyle: { proactive: 'wants proactive warnings about risky pages', only_when_asked: 'prefers to only be told when they ask' },
+};
+
+const TOP_CONCERN_DESCRIPTIONS = {
+  phishing_email: 'suspicious emails, texts, or calls',
+  fake_shopping: 'fake shopping or payment sites',
+  tech_support_scams: 'fake tech support or pop-up warnings',
+  social_media_scams: 'scams on social media',
+  romance_scams: 'romance or relationship scams',
+  government_imposter: 'fake IRS, Social Security, or Medicare messages',
+  prize_lottery_scams: 'prize, lottery, or sweepstakes scams',
+  fake_charity: 'fake charity requests',
+  other: 'general online safety',
 };
 
 /** Build a personalized system instruction from a validated onboarding profile. */
@@ -52,6 +61,13 @@ function buildSystemInstruction(profile) {
     if (allowedValues.includes(value)) {
       lines.push(`- ${field === 'userRole' ? 'Setup by' : field}: ${PROFILE_DESCRIPTIONS[field][value]}`);
     }
+  }
+
+  if (Array.isArray(profile.topConcerns)) {
+    const concerns = profile.topConcerns
+      .filter((v) => TOP_CONCERN_VALUES.includes(v))
+      .map((v) => TOP_CONCERN_DESCRIPTIONS[v]);
+    if (concerns.length) lines.push(`- topConcerns: ${concerns.join(', ')}`);
   }
 
   if (!lines.length) return SYSTEM_PROMPT;
