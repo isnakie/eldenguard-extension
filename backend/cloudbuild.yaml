@@ -5,6 +5,19 @@ steps:
     args: ['push', 'gcr.io/$PROJECT_ID/eldenguard-backend:latest']
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
-    args: ['run', 'deploy', 'eldenguard-backend', '--image', 'gcr.io/$PROJECT_ID/eldenguard-backend:latest', '--region', 'us-central1', '--platform', 'managed', '--allow-unauthenticated', '--set-env-vars', 'SAFE_BROWSING_API_KEY=$_SAFE_BROWSING_API_KEY']
+    args:
+      - 'run'
+      - 'deploy'
+      - 'eldenguard-backend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/eldenguard-backend:latest'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'SAFE_BROWSING_API_KEY=$_SAFE_BROWSING_API_KEY,GEMINI_API_KEY=$_GEMINI_API_KEY'
 substitutions:
   _SAFE_BROWSING_API_KEY: ''
+  _GEMINI_API_KEY: ''
