@@ -119,14 +119,40 @@ Response Displayed In Sidebar
 - LM Studio (local server, port 1234)
 - Compatible with any model loaded in LM Studio
 
-## Planned Backend
-- Google Cloud Platform
-- Google Cloud Functions
+## Backend
+- Google Cloud Run (Node.js/Express proxy, see `backend/`)
 - Google Safe Browsing API
 
 ## Security APIs
-- Google Safe Browsing API (integration in progress)
+- Google Safe Browsing API (live, via Cloud Run backend proxy)
 - FTC Consumer Alerts RSS Feed (live)
+
+## Local Backend Proxy
+- `backend/server.js` provides a secure proxy for Google Safe Browsing
+- Store `SAFE_BROWSING_API_KEY` on the server, never in extension code
+- Run the backend locally with `npm install` and `npm start`
+- The extension forwards URL checks to `http://localhost:3000/api/check-url` while testing
+
+## Deployment to Google Cloud Run
+1. Install and authenticate the Google Cloud SDK.
+2. Enable the Cloud Run, Cloud Build, and Secret Manager APIs.
+3. In `backend/.env`, set `SAFE_BROWSING_API_KEY`.
+4. Run:
+   ```bash
+   cd backend
+   npm install
+   chmod +x deploy.sh
+   export SAFE_BROWSING_API_KEY="your_key_here"
+   ./deploy.sh YOUR_GCP_PROJECT_ID
+   ```
+5. After deploy, update `src/utils/config.js` with your deployed Cloud Run URL:
+   ```js
+   export const BACKEND_SAFE_BROWSING_URL = 'https://<YOUR_SERVICE_ID>-<REGION>.a.run.app/api/check-url';
+   ```
+
+## Notes
+- Use a production domain or Cloud Run URL in `src/utils/config.js`.
+- Never commit `backend/.env` or the actual API key to source control.
 
 ---
 
@@ -171,16 +197,12 @@ The current version uses:
 - LM Studio for local AI responses
 - Local heuristic scanning for URL safety
 - Live FTC RSS feed for scam alerts
-- Google Safe Browsing API integration planned
-
-Cloud backend deployment is pending Google Cloud Platform setup.
+- Google Safe Browsing API, checked through a Cloud Run backend proxy (see `backend/`)
 
 ---
 
 # Planned Future Features
 
-- Google Cloud Functions backend
-- Google Safe Browsing API integration
 - Voice assistance
 - OCR / screenshot analysis
 - Live phishing classification
@@ -209,7 +231,7 @@ Cloud backend deployment is pending Google Cloud Platform setup.
 | AI Integration | API routing and LLM integration |
 | Security Logic | URL heuristics and phishing detection |
 | UI/UX | Accessibility-focused interface design |
-| Cloud Backend | Google Cloud Functions and API integration |
+| Cloud Backend | Google Cloud Run and Safe Browsing API integration |
 
 ---
 

@@ -7,18 +7,24 @@
   bottom: 24px;
   right: 24px;
   z-index: 2147483646; /* max z-index - 1 */
-  width: 60px;
-  height: 60px;
+  width: 78px;
+  height: 78px;
   border-radius: 50%;
   border: none;
   background: #062A52;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   padding: 0;
+}
+
+#eldenguard-avatar.dragging {
+  cursor: grabbing;
+  transition: none;
 }
 
 #eldenguard-avatar:hover {
@@ -29,6 +35,17 @@
 #eldenguard-avatar.active {
   background: #00A896;
   transform: scale(1.05);
+}
+
+/* Blinking eyes */
+#eldenguard-avatar .eldenguard-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.09s ease;
+}
+
+#eldenguard-avatar .eldenguard-eye.blinking {
+  transform: scaleY(0.08);
 }
 
 /* Pulse ring animation when a threat is detected */
@@ -123,4 +140,27 @@
 
 .eldenguard-alert__close:hover {
   opacity: 1;
+}
+
+/* ── Flagged link warnings ─────────────────────────────────────────────────── */
+a.eldenguard-flagged-link {
+  background: #FEE2E2 !important;
+  color: #991B1B !important;
+  border: 1px solid #DC2626 !important;
+  border-radius: 4px;
+  padding: 0 4px;
+  text-decoration: none !important;
+  cursor: not-allowed !important;
+  font-weight: 600;
+  /* Neutralize any transform/writing-mode the host page applies to this
+     element (e.g. hidden/duplicate link elements some sites rotate or
+     mirror off-screen) so the warning always renders upright. */
+  transform: none !important;
+  writing-mode: horizontal-tb !important;
+  direction: ltr !important;
+  unicode-bidi: normal !important;
+}
+
+a.eldenguard-flagged-link::before {
+  content: "⚠️ ";
 }

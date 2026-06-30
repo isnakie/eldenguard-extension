@@ -10,6 +10,10 @@ let sidebarFrame = null;
 let avatarBtn = null;
 let alertBanner = null;
 
+// FLAGGED LINK TRACKING (url -> [{ el, html }], so unlocking restores every
+// instance of a repeated link, e.g. the same scam URL in a header and footer)
+const flaggedLinkOriginals = new Map();
+
 // AVATAR BUTTON
 function createAvatar() {
   if (document.getElementById("eldenguard-avatar")) return;
@@ -19,28 +23,191 @@ function createAvatar() {
   avatarBtn.setAttribute("aria-label", "Open EldenGuard assistant");
   avatarBtn.title = "EldenGuard - click for help";
   avatarBtn.innerHTML = `
-    <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <!-- Owl head -->
-      <circle cx="18" cy="15" r="12" fill="#0D3B6E"/>
-      <!-- Eyes -->
-      <circle cx="13" cy="14" r="4.5" fill="#CADCFC"/>
-      <circle cx="13" cy="14" r="3" fill="#00A896"/>
-      <circle cx="13" cy="14" r="1.5" fill="#062A52"/>
-      <circle cx="14" cy="13" r="0.8" fill="white"/>
-      <circle cx="23" cy="14" r="4.5" fill="#CADCFC"/>
-      <circle cx="23" cy="14" r="3" fill="#00A896"/>
-      <circle cx="23" cy="14" r="1.5" fill="#062A52"/>
-      <circle cx="24" cy="13" r="0.8" fill="white"/>
-      <!-- Beak -->
-      <path d="M15 19 L18 22 L21 19 Q18 17 15 19Z" fill="#F5A623"/>
+    <svg width="47" height="47" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <!-- Head (scaled up around its own center: bigger head, body stays put) -->
+      <g transform="translate(18,15) scale(1.2) translate(-18,-15)">
+        <circle cx="18" cy="15" r="12" fill="#0D3B6E"/>
+        <!-- Eyes -->
+        <g class="eldenguard-eye">
+          <circle cx="13" cy="14" r="4.5" fill="#CADCFC"/>
+          <circle cx="13" cy="14" r="3" fill="#00A896"/>
+          <circle id="eldenguard-pupil-left" cx="13" cy="14" r="1.5" fill="#062A52"/>
+        </g>
+        <g class="eldenguard-eye">
+          <circle cx="23" cy="14" r="4.5" fill="#CADCFC"/>
+          <circle cx="23" cy="14" r="3" fill="#00A896"/>
+          <circle id="eldenguard-pupil-right" cx="23" cy="14" r="1.5" fill="#062A52"/>
+        </g>
+        <!-- Beak -->
+        <path d="M15 19 L18 22 L21 19 Q18 17 15 19Z" fill="#F5A623"/>
+      </g>
       <!-- Shield emblem on chest -->
       <path d="M18 26 L22 27.5 L22 32.5 Q22 35 18 36 Q14 35 14 32.5 L14 27.5 Z" fill="#00A896"/>
       <path d="M16 31 L17.5 33 L20.5 29" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
     </svg>
   `;
 
-  avatarBtn.addEventListener("click", toggleSidebar);
+  avatarBtn.addEventListener("click", (e) => {
+    if (avatarBtn.dataset.suppressClick === "true") {
+      delete avatarBtn.dataset.suppressClick;
+      return;
+    }
+    toggleSidebar();
+  });
   document.body.appendChild(avatarBtn);
+
+  initAvatarDragging();
+  restoreAvatarPosition();
+}
+
+// DRAG TO REPOSITION
+// Position is saved to chrome.storage.local so the avatar stays where the
+// user put it across page loads and across every site they visit.
+const AVATAR_POSITION_KEY = "wiseowlAvatarPosition";
+const DRAG_THRESHOLD = 4; // px of movement before a click counts as a drag
+
+function clampAvatarPosition(left, top) {
+  const rect = avatarBtn.getBoundingClientRect();
+  const maxLeft = Math.max(window.innerWidth - rect.width, 0);
+  const maxTop = Math.max(window.innerHeight - rect.height, 0);
+  return {
+    left: Math.min(Math.max(left, 0), maxLeft),
+    top: Math.min(Math.max(top, 0), maxTop),
+  };
+}
+
+function applyAvatarPosition(left, top) {
+  avatarBtn.style.left = `${left}px`;
+  avatarBtn.style.top = `${top}px`;
+  avatarBtn.style.right = "auto";
+  avatarBtn.style.bottom = "auto";
+}
+
+function restoreAvatarPosition() {
+  chrome.storage.local.get([AVATAR_POSITION_KEY], (result) => {
+    const saved = result[AVATAR_POSITION_KEY];
+    if (!saved) return;
+    const { left, top } = clampAvatarPosition(saved.left, saved.top);
+    applyAvatarPosition(left, top);
+  });
+}
+
+function initAvatarDragging() {
+  let dragState = null;
+
+  avatarBtn.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return; // left click / primary touch only
+    const rect = avatarBtn.getBoundingClientRect();
+    dragState = {
+      startX: e.clientX,
+      startY: e.clientY,
+      originLeft: rect.left,
+      originTop: rect.top,
+      moved: false,
+    };
+    avatarBtn.setPointerCapture(e.pointerId);
+  });
+
+  avatarBtn.addEventListener("pointermove", (e) => {
+    if (!dragState) return;
+    const dx = e.clientX - dragState.startX;
+    const dy = e.clientY - dragState.startY;
+
+    if (!dragState.moved && Math.hypot(dx, dy) > DRAG_THRESHOLD) {
+      dragState.moved = true;
+      avatarBtn.classList.add("dragging");
+    }
+
+    if (dragState.moved) {
+      const { left, top } = clampAvatarPosition(dragState.originLeft + dx, dragState.originTop + dy);
+      applyAvatarPosition(left, top);
+    }
+  });
+
+  avatarBtn.addEventListener("pointerup", (e) => {
+    if (!dragState) return;
+    if (dragState.moved) {
+      avatarBtn.classList.remove("dragging");
+      const rect = avatarBtn.getBoundingClientRect();
+      chrome.storage.local.set({ [AVATAR_POSITION_KEY]: { left: rect.left, top: rect.top } });
+      // The browser still fires a "click" after pointerup even though the
+      // button moved under the cursor - suppress it so dragging doesn't
+      // also toggle the sidebar open.
+      avatarBtn.dataset.suppressClick = "true";
+    }
+    dragState = null;
+  });
+
+  // Keep the avatar on-screen if the window is resized after being dragged near an edge
+  window.addEventListener("resize", () => {
+    const rect = avatarBtn.getBoundingClientRect();
+    if (avatarBtn.style.left) {
+      const { left, top } = clampAvatarPosition(rect.left, rect.top);
+      applyAvatarPosition(left, top);
+    }
+  });
+}
+
+// EYE TRACKING — pupils follow the cursor within a small radius so the owl feels alive
+const EYE_MAX_OFFSET = 1.4; // stay inside the iris (r=3) so pupils never poke out
+const EYES = [
+  { id: "eldenguard-pupil-left", baseX: 13, baseY: 14 },
+  { id: "eldenguard-pupil-right", baseX: 23, baseY: 14 },
+];
+
+let lastMouseX = 0;
+let lastMouseY = 0;
+let eyeTrackingScheduled = false;
+
+function updateEyeTracking() {
+  eyeTrackingScheduled = false;
+  if (!avatarBtn) return;
+
+  const rect = avatarBtn.getBoundingClientRect();
+  if (rect.width === 0) return; // avatar not visible/laid out yet
+
+  EYES.forEach(({ id, baseX, baseY }) => {
+    const pupil = document.getElementById(id);
+    if (!pupil) return;
+
+    // Convert the eye's position in the 36x36 SVG viewBox to viewport coordinates
+    const eyeViewportX = rect.left + (baseX / 36) * rect.width;
+    const eyeViewportY = rect.top + (baseY / 36) * rect.height;
+
+    const dx = lastMouseX - eyeViewportX;
+    const dy = lastMouseY - eyeViewportY;
+    const distance = Math.hypot(dx, dy) || 1;
+
+    pupil.setAttribute("cx", baseX + (dx / distance) * EYE_MAX_OFFSET);
+    pupil.setAttribute("cy", baseY + (dy / distance) * EYE_MAX_OFFSET);
+  });
+}
+
+document.addEventListener("mousemove", (e) => {
+  lastMouseX = e.clientX;
+  lastMouseY = e.clientY;
+  if (!eyeTrackingScheduled) {
+    eyeTrackingScheduled = true;
+    requestAnimationFrame(updateEyeTracking);
+  }
+});
+
+// RANDOM BLINKING
+function blinkOwl() {
+  const eyes = document.querySelectorAll("#eldenguard-avatar .eldenguard-eye");
+  if (!eyes.length) return;
+  eyes.forEach((eye) => eye.classList.add("blinking"));
+  setTimeout(() => {
+    eyes.forEach((eye) => eye.classList.remove("blinking"));
+  }, 120);
+}
+
+function scheduleNextBlink() {
+  const delay = 2000 + Math.random() * 4000; // every 2-6s, randomized so it feels natural
+  setTimeout(() => {
+    blinkOwl();
+    scheduleNextBlink();
+  }, delay);
 }
 
 // SIDEBAR
@@ -105,6 +272,132 @@ function showAlertBanner(level, message) {
   }
 }
 
+// AUTO LINK SCANNING
+// Checks every external (cross-origin) link on the page against WiseOwl's safety
+// check, and visually flags any that come back as a threat. Same-site navigation
+// links are skipped to keep the number of checks reasonable.
+function flagLink(url, elements) {
+  const records = [];
+  elements.forEach((el) => {
+    if (el.classList.contains("eldenguard-flagged-link")) return;
+    records.push({ el, html: el.innerHTML });
+    el.classList.add("eldenguard-flagged-link");
+    el.setAttribute("aria-disabled", "true");
+    el.title = 'WiseOwl: This link may be unsafe. Right-click it and choose "Remove WiseOwl warning" to open it.';
+    el.textContent = "WiseOwl detected possible malicious link here";
+  });
+  if (records.length) flaggedLinkOriginals.set(url, records);
+}
+
+function unlockLink(url) {
+  const records = flaggedLinkOriginals.get(url);
+  if (!records) return;
+  records.forEach(({ el, html }) => {
+    el.innerHTML = html;
+    el.classList.remove("eldenguard-flagged-link");
+    el.removeAttribute("aria-disabled");
+    el.removeAttribute("title");
+  });
+  flaggedLinkOriginals.delete(url);
+}
+
+// Some sites embed hidden/duplicate <a> elements (off-screen overlays, layout
+// helpers, "flip card" back-faces) that were never meant to display text.
+// Skip flagging those - a user can't click something they can't see, and
+// overwriting their content tends to pick up whatever odd styling (rotation,
+// mirroring, zero size) was hiding them.
+//
+// Walk up the ancestor chain looking for a transform that mirrors the element
+// on either axis. A negative `a` (horizontal scale) or `d` (vertical scale)
+// component reliably signals a mirror/flip no matter which CSS function
+// produced it - rotate(180deg), scaleX/Y(-1), and even 3D rotateX/Y(180deg)
+// (a common "flip card" trick) all project to a negative a and/or d.
+function hasFlippedAncestor(el) {
+  let node = el;
+  let depth = 0;
+  while (node && depth < 10) {
+    const t = getComputedStyle(node).transform;
+    if (t && t !== "none") {
+      try {
+        const m = new DOMMatrix(t);
+        if (m.a < -0.01 || m.d < -0.01) return true;
+      } catch {
+        // Unparsable transform value - ignore and keep walking up
+      }
+    }
+    node = node.parentElement;
+    depth++;
+  }
+  return false;
+}
+
+function isVisibleLink(el) {
+  const rect = el.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return false;
+  const style = getComputedStyle(el);
+  if (style.visibility === "hidden" || style.display === "none" || parseFloat(style.opacity) === 0) return false;
+  return !hasFlippedAncestor(el);
+}
+
+async function scanPageLinks() {
+  const linksByUrl = new Map();
+
+  document.querySelectorAll("a[href]").forEach((el) => {
+    let parsed;
+    try {
+      parsed = new URL(el.href);
+    } catch {
+      return;
+    }
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return;
+    if (parsed.origin === window.location.origin) return;
+    if (!isVisibleLink(el)) return;
+
+    if (!linksByUrl.has(el.href)) linksByUrl.set(el.href, []);
+    linksByUrl.get(el.href).push(el);
+  });
+
+  const urls = Array.from(linksByUrl.keys());
+  if (!urls.length) return;
+
+  const CONCURRENCY = 4;
+  let nextIndex = 0;
+
+  async function worker() {
+    while (nextIndex < urls.length) {
+      const url = urls[nextIndex++];
+      try {
+        const response = await new Promise((resolve) => {
+          chrome.runtime.sendMessage({ type: "CHECK_URL", payload: { url } }, resolve);
+        });
+        if (response?.success && response.result?.isThreat) {
+          flagLink(url, linksByUrl.get(url));
+        }
+      } catch {
+        // Skip this link silently if the check fails
+      }
+    }
+  }
+
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, urls.length) }, worker));
+}
+
+// Block navigation on flagged links until the user unlocks them
+document.addEventListener(
+  "click",
+  (e) => {
+    const link = e.target.closest?.("a.eldenguard-flagged-link");
+    if (!link) return;
+    e.preventDefault();
+    e.stopPropagation();
+    showAlertBanner(
+      "warning",
+      'This link is flagged as a possible phishing link. Right-click it and choose "Remove WiseOwl warning" to open it.'
+    );
+  },
+  true
+);
+
 // SCREENSHOT / SCREEN GRAB
 // Captures the visible tab and sends it to the sidebar for analysis.
 async function captureScreenshot() {
@@ -124,6 +417,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.type === "SHOW_ALERT") {
     showAlertBanner(message.payload.level, message.payload.message);
+  }
+
+  if (message.type === "UNLOCK_LINK" && message.payload?.url) {
+    unlockLink(message.payload.url);
   }
 
   if (message.type === "SHOW_RESULT") {
@@ -152,3 +449,5 @@ window.addEventListener("message", async (event) => {
 
 // INIT
 createAvatar();
+scanPageLinks();
+scheduleNextBlink();
