@@ -87,6 +87,13 @@ chrome.runtime.onInstalled.addListener(createContextMenus);
 chrome.runtime.onStartup.addListener(createContextMenus);
 createContextMenus();
 
+// FIRST-INSTALL ONBOARDING SURVEY
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === "install") {
+    chrome.tabs.create({ url: chrome.runtime.getURL("src/onboarding/onboarding.html") });
+  }
+});
+
 // Refresh FTC RSS feed every hour in the background
 chrome.runtime.onInstalled.addListener(() => {
   chrome.alarms.create('refreshScamAlerts', { periodInMinutes: 60 });
@@ -157,20 +164,26 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   console.log("WiseOwl page check result:", safetyResult);
 
   if (safetyResult.isThreat) {
-    // Alert the content script to show a warning banner
-    try {
-      chrome.tabs.sendMessage(tabId, {
-        type: "SHOW_ALERT",
-        payload: {
-          level: "danger",
-          message: formatAlertMessage(safetyResult),
-        },
-      });
-      // Update the extension badge
-      chrome.action.setBadgeText({ tabId, text: "!" });
-      chrome.action.setBadgeBackgroundColor({ tabId, color: "#DC2626" });
-    } catch (error) {
-      console.log("Content script not ready yet");
+    // The badge always reflects risk so the user can check it themselves.
+    // Whether we also interrupt them with a banner depends on their onboarding preference.
+    chrome.action.setBadgeText({ tabId, text: "!" });
+    chrome.action.setBadgeBackgroundColor({ tabId, color: "#DC2626" });
+
+    const { userProfile } = await chrome.storage.local.get("userProfile");
+    const wantsProactiveWarning = userProfile?.warningStyle !== "only_when_asked";
+
+    if (wantsProactiveWarning) {
+      try {
+        chrome.tabs.sendMessage(tabId, {
+          type: "SHOW_ALERT",
+          payload: {
+            level: "danger",
+            message: formatAlertMessage(safetyResult),
+          },
+        });
+      } catch (error) {
+        console.log("Content script not ready yet");
+      }
     }
   } else {
     chrome.action.setBadgeText({ tabId, text: "" });

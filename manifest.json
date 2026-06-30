@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "EldenGuard",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Your friendly browser safety co-pilot protecting you from scams and unsafe websites.",
 
   "permissions": [
@@ -22,6 +22,8 @@
     "service_worker": "src/background/service-worker.js",
     "type": "module"
   },
+
+  "options_page": "src/onboarding/onboarding.html",
 
   "content_scripts": [
     {

@@ -17,6 +17,63 @@ Be concise and clear. When analyzing a page, focus on:
 - Trust signals (HTTPS, known domain, contact info)
 Keep responses under 3 sentences unless the user asks for more detail.`;
 
+// Whitelisted onboarding-survey values. Profile data comes from the extension's own
+// radio-button UI, but it still crosses a trust boundary into the LLM prompt, so we
+// validate against known values rather than trusting it blindly (defense in depth).
+const PROFILE_OPTIONS = {
+  userRole: ['self', 'caregiver_setup'],
+  techLevel: ['beginner', 'intermediate', 'advanced'],
+  explanationStyle: ['simple_short', 'normal', 'detailed'],
+  warningStyle: ['proactive', 'only_when_asked'],
+};
+
+const TOP_CONCERN_VALUES = [
+  'phishing_email', 'fake_shopping', 'tech_support_scams', 'social_media_scams',
+  'romance_scams', 'government_imposter', 'prize_lottery_scams', 'fake_charity', 'other',
+];
+
+const PROFILE_DESCRIPTIONS = {
+  userRole: { self: 'the user themself', caregiver_setup: 'a trusted person setting this up on behalf of the primary user' },
+  techLevel: { beginner: 'beginner — explain things simply, avoid jargon', intermediate: 'somewhat comfortable with technology', advanced: 'comfortable with technical terms' },
+  explanationStyle: { simple_short: 'very simple and short', normal: 'normal, everyday language', detailed: 'detailed with technical reasons' },
+  warningStyle: { proactive: 'wants proactive warnings about risky pages', only_when_asked: 'prefers to only be told when they ask' },
+};
+
+const TOP_CONCERN_DESCRIPTIONS = {
+  phishing_email: 'suspicious emails, texts, or calls',
+  fake_shopping: 'fake shopping or payment sites',
+  tech_support_scams: 'fake tech support or pop-up warnings',
+  social_media_scams: 'scams on social media',
+  romance_scams: 'romance or relationship scams',
+  government_imposter: 'fake IRS, Social Security, or Medicare messages',
+  prize_lottery_scams: 'prize, lottery, or sweepstakes scams',
+  fake_charity: 'fake charity requests',
+  other: 'general online safety',
+};
+
+/** Build a personalized system instruction from a validated onboarding profile. */
+function buildSystemInstruction(profile) {
+  if (!profile || typeof profile !== 'object') return SYSTEM_PROMPT;
+
+  const lines = [];
+  for (const [field, allowedValues] of Object.entries(PROFILE_OPTIONS)) {
+    const value = profile[field];
+    if (allowedValues.includes(value)) {
+      lines.push(`- ${field === 'userRole' ? 'Setup by' : field}: ${PROFILE_DESCRIPTIONS[field][value]}`);
+    }
+  }
+
+  if (Array.isArray(profile.topConcerns)) {
+    const concerns = profile.topConcerns
+      .filter((v) => TOP_CONCERN_VALUES.includes(v))
+      .map((v) => TOP_CONCERN_DESCRIPTIONS[v]);
+    if (concerns.length) lines.push(`- topConcerns: ${concerns.join(', ')}`);
+  }
+
+  if (!lines.length) return SYSTEM_PROMPT;
+  return `${SYSTEM_PROMPT}\n\nUser profile (adjust tone, detail, and focus accordingly):\n${lines.join('\n')}`;
+}
+
 app.use(express.json());
 
 // Allow requests from Chrome extensions and any origin
@@ -33,7 +90,7 @@ app.get('/health', (req, res) => {
 });
 
 app.post('/api/chat', async (req, res) => {
-  const { message, url } = req.body;
+  const { message, url, profile } = req.body;
   if (!message || typeof message !== 'string') {
     return res.status(400).json({ error: 'Missing message in request body.' });
   }
@@ -48,7 +105,7 @@ app.post('/api/chat', async (req, res) => {
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.5-flash',
-      systemInstruction: SYSTEM_PROMPT,
+      systemInstruction: buildSystemInstruction(profile),
     });
     const result = await model.generateContent(userMessage);
     return res.json({ text: result.response.text() });
