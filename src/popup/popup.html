@@ -88,7 +88,12 @@
     <span>Check this page now</span>
   </button>
 
-  <p class="footer">EldenGuard v0.1.0 • Capstone Project</p>
+  <button class="action" id="btn-edit-profile">
+    <span class="action-icon">??</span>
+    <span>Edit my preferences</span>
+  </button>
+
+  <p class="footer">EldenGuard v0.1.0 ï¿½ Capstone Project</p>
 
   <script>
     // Show current tab URL and check safety
@@ -118,6 +123,10 @@
           statusEl.textContent = "Local page";
         }
       }
+    });
+
+    document.getElementById("btn-edit-profile").addEventListener("click", () => {
+      chrome.runtime.openOptionsPage();
     });
 
     // Open sidebar on the current tab

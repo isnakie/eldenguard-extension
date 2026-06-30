@@ -1,0 +1,117 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy: #062A52;
+  --teal: #00A896;
+  --ltblue: #CADCFC;
+  --offwh: #F4F8FF;
+  --gray: #64748B;
+  --dkgray: #1E293B;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--offwh);
+  color: var(--dkgray);
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 24px 60px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+h1 { font-size: 26px; color: var(--navy); }
+.subtitle { font-size: 15px; color: var(--gray); margin-top: 4px; }
+
+.disclosure {
+  background: white;
+  border-left: 4px solid var(--teal);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 14px;
+  color: var(--gray);
+  margin: 20px 0 32px;
+}
+
+.question {
+  border: none;
+  background: white;
+  border-radius: 12px;
+  padding: 20px 22px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.question legend {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--navy);
+  padding: 0 0 14px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.12s;
+}
+
+.option:hover { background: var(--offwh); }
+
+.option input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--teal);
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.btn-primary, .btn-secondary {
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 14px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.btn-primary { background: var(--teal); color: white; }
+.btn-primary:hover { background: #008F7C; }
+.btn-primary:active { transform: scale(0.99); }
+
+.btn-secondary { background: transparent; color: var(--gray); }
+.btn-secondary:hover { color: var(--dkgray); text-decoration: underline; }
+
+.status {
+  text-align: center;
+  font-size: 14px;
+  color: var(--teal);
+  min-height: 20px;
+  margin-top: 6px;
+}
+
+.status.error { color: #DC2626; }

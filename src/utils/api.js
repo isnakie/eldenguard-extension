@@ -11,12 +11,14 @@ import { BACKEND_CHAT_URL } from './config.js';
  * @returns {Promise<string>} Model response
  */
 export async function callEldenGuardAPI({ message, url }) {
+  const { userProfile } = await chrome.storage.local.get('userProfile');
+
   let response;
   try {
     response = await fetch(BACKEND_CHAT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, url })
+      body: JSON.stringify({ message, url, profile: userProfile ?? null })
     });
   } catch (err) {
     throw new Error('Cannot reach EldenGuard backend. Check your internet connection.');

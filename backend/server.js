@@ -17,6 +17,47 @@ Be concise and clear. When analyzing a page, focus on:
 - Trust signals (HTTPS, known domain, contact info)
 Keep responses under 3 sentences unless the user asks for more detail.`;
 
+// Whitelisted onboarding-survey values. Profile data comes from the extension's own
+// radio-button UI, but it still crosses a trust boundary into the LLM prompt, so we
+// validate against known values rather than trusting it blindly (defense in depth).
+const PROFILE_OPTIONS = {
+  userRole: ['self', 'caregiver_setup'],
+  techLevel: ['beginner', 'intermediate', 'advanced'],
+  topConcern: ['phishing_email', 'fake_shopping', 'tech_support_scams', 'social_media_scams', 'other'],
+  explanationStyle: ['simple_short', 'normal', 'detailed'],
+  warningStyle: ['proactive', 'only_when_asked'],
+};
+
+const PROFILE_DESCRIPTIONS = {
+  userRole: { self: 'the user themself', caregiver_setup: 'a trusted person setting this up on behalf of the primary user' },
+  techLevel: { beginner: 'beginner — explain things simply, avoid jargon', intermediate: 'somewhat comfortable with technology', advanced: 'comfortable with technical terms' },
+  topConcern: {
+    phishing_email: 'suspicious emails or messages',
+    fake_shopping: 'fake shopping or payment sites',
+    tech_support_scams: 'fake tech support or pop-up warnings',
+    social_media_scams: 'scams on social media',
+    other: 'general online safety',
+  },
+  explanationStyle: { simple_short: 'very simple and short', normal: 'normal, everyday language', detailed: 'detailed with technical reasons' },
+  warningStyle: { proactive: 'wants proactive warnings about risky pages', only_when_asked: 'prefers to only be told when they ask' },
+};
+
+/** Build a personalized system instruction from a validated onboarding profile. */
+function buildSystemInstruction(profile) {
+  if (!profile || typeof profile !== 'object') return SYSTEM_PROMPT;
+
+  const lines = [];
+  for (const [field, allowedValues] of Object.entries(PROFILE_OPTIONS)) {
+    const value = profile[field];
+    if (allowedValues.includes(value)) {
+      lines.push(`- ${field === 'userRole' ? 'Setup by' : field}: ${PROFILE_DESCRIPTIONS[field][value]}`);
+    }
+  }
+
+  if (!lines.length) return SYSTEM_PROMPT;
+  return `${SYSTEM_PROMPT}\n\nUser profile (adjust tone, detail, and focus accordingly):\n${lines.join('\n')}`;
+}
+
 app.use(express.json());
 
 // Allow requests from Chrome extensions and any origin
@@ -33,7 +74,7 @@ app.get('/health', (req, res) => {
 });
 
 app.post('/api/chat', async (req, res) => {
-  const { message, url } = req.body;
+  const { message, url, profile } = req.body;
   if (!message || typeof message !== 'string') {
     return res.status(400).json({ error: 'Missing message in request body.' });
   }
@@ -48,7 +89,7 @@ app.post('/api/chat', async (req, res) => {
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.5-flash',
-      systemInstruction: SYSTEM_PROMPT,
+      systemInstruction: buildSystemInstruction(profile),
     });
     const result = await model.generateContent(userMessage);
     return res.json({ text: result.response.text() });

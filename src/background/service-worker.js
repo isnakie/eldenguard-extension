@@ -87,6 +87,13 @@ chrome.runtime.onInstalled.addListener(createContextMenus);
 chrome.runtime.onStartup.addListener(createContextMenus);
 createContextMenus();
 
+// FIRST-INSTALL ONBOARDING SURVEY
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === "install") {
+    chrome.tabs.create({ url: chrome.runtime.getURL("src/onboarding/onboarding.html") });
+  }
+});
+
 // Refresh FTC RSS feed every hour in the background
 chrome.runtime.onInstalled.addListener(() => {
   chrome.alarms.create('refreshScamAlerts', { periodInMinutes: 60 });

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to WiseOwl</title>
+  <link rel="stylesheet" href="onboarding.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="header">
+      <svg width="48" height="48" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+        <circle cx="18" cy="15" r="12" fill="#0D3B6E"/>
+        <circle cx="13" cy="14" r="4.5" fill="#CADCFC"/>
+        <circle cx="13" cy="14" r="3" fill="#00A896"/>
+        <circle cx="13" cy="14" r="1.5" fill="#062A52"/>
+        <circle cx="14" cy="13" r="0.8" fill="white"/>
+        <circle cx="23" cy="14" r="4.5" fill="#CADCFC"/>
+        <circle cx="23" cy="14" r="3" fill="#00A896"/>
+        <circle cx="23" cy="14" r="1.5" fill="#062A52"/>
+        <circle cx="24" cy="13" r="0.8" fill="white"/>
+        <path d="M15 19 L18 22 L21 19 Q18 17 15 19Z" fill="#F5A623"/>
+        <path d="M18 26 L22 27.5 L22 32.5 Q22 35 18 36 Q14 35 14 32.5 L14 27.5 Z" fill="#00A896"/>
+        <path d="M16 31 L17.5 33 L20.5 29" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <div>
+        <h1>Welcome to WiseOwl</h1>
+        <p class="subtitle">Let's personalize how WiseOwl helps you stay safe online.</p>
+      </div>
+    </header>
+
+    <p class="disclosure">
+      Your answers are saved only on this device and used to personalize WiseOwl's responses.
+      They are never shared, sold, or used for anything else.
+    </p>
+
+    <form id="survey-form">
+
+      <fieldset class="question">
+        <legend>1. Who will mainly be using WiseOwl?</legend>
+        <label class="option"><input type="radio" name="userRole" value="self" required> I'll be using it myself</label>
+        <label class="option"><input type="radio" name="userRole" value="caregiver_setup"> I'm setting this up for a family member or someone I help</label>
+      </fieldset>
+
+      <fieldset class="question">
+        <legend>2. How comfortable are you with computers and technology?</legend>
+        <label class="option"><input type="radio" name="techLevel" value="beginner" required> Not very comfortable — I'd like things explained simply</label>
+        <label class="option"><input type="radio" name="techLevel" value="intermediate"> Somewhat comfortable</label>
+        <label class="option"><input type="radio" name="techLevel" value="advanced"> Very comfortable — I understand technical terms</label>
+      </fieldset>
+
+      <fieldset class="question">
+        <legend>3. What worries you most online?</legend>
+        <label class="option"><input type="radio" name="topConcern" value="phishing_email" required> Suspicious emails or messages</label>
+        <label class="option"><input type="radio" name="topConcern" value="fake_shopping"> Fake shopping or payment sites</label>
+        <label class="option"><input type="radio" name="topConcern" value="tech_support_scams"> Fake "tech support" or pop-up warnings</label>
+        <label class="option"><input type="radio" name="topConcern" value="social_media_scams"> Scams on social media</label>
+        <label class="option"><input type="radio" name="topConcern" value="other"> Something else / not sure</label>
+      </fieldset>
+
+      <fieldset class="question">
+        <legend>4. How should WiseOwl explain things to you?</legend>
+        <label class="option"><input type="radio" name="explanationStyle" value="simple_short" required> Very simple and short</label>
+        <label class="option"><input type="radio" name="explanationStyle" value="normal"> Normal, everyday language</label>
+        <label class="option"><input type="radio" name="explanationStyle" value="detailed"> Detailed, with technical reasons</label>
+      </fieldset>
+
+      <fieldset class="question">
+        <legend>5. Should WiseOwl warn you automatically, or only when you ask?</legend>
+        <label class="option"><input type="radio" name="warningStyle" value="proactive" required> Warn me automatically about risky pages</label>
+        <label class="option"><input type="radio" name="warningStyle" value="only_when_asked"> Only tell me when I ask</label>
+      </fieldset>
+
+      <div class="actions">
+        <button type="submit" class="btn-primary" id="btn-save">Save and start using WiseOwl</button>
+        <button type="button" class="btn-secondary" id="btn-skip">Skip for now</button>
+      </div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+    </form>
+  </main>
+
+  <script src="onboarding.js"></script>
+</body>
+</html>
