@@ -42,6 +42,8 @@ function sendQuestion(text) {
     clearScreenshotPreview();
   }
 
+  window.parent.postMessage({ type: "SET_EXPRESSION", expression: "thinking" }, "*");
+
   chrome.runtime.sendMessage(
     { type: "ASK_ELDENGUARD", payload },
     (response) => {
@@ -50,8 +52,12 @@ function sendQuestion(text) {
       sendBtn.disabled = false;
 
       if (response?.success) {
+        window.parent.postMessage({ type: "SET_EXPRESSION", expression: "happy" }, "*");
+        setTimeout(() => window.parent.postMessage({ type: "SET_EXPRESSION", expression: "normal" }, "*"), 2500);
         addMessage("guard", response.text);
       } else {
+        window.parent.postMessage({ type: "SET_EXPRESSION", expression: "worried" }, "*");
+        setTimeout(() => window.parent.postMessage({ type: "SET_EXPRESSION", expression: "normal" }, "*"), 2500);
         addMessage("guard", "Sorry, I had trouble connecting. Please try again.");
       }
     }

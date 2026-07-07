@@ -153,10 +153,14 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status !== "complete" || !tab.url) return;
   if (tab.url.startsWith("chrome://") || tab.url.startsWith("about:") || tab.url.startsWith("edge://")) return;
 
+  // Show thinking expression while scanning
+  chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "thinking" } }).catch(() => {});
+
   const safetyResult = await checkUrlSafety(tab.url);
   console.log("WiseOwl page check result:", safetyResult);
 
   if (safetyResult.isThreat) {
+    chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "angry" } }).catch(() => {});
     // Alert the content script to show a warning banner
     try {
       chrome.tabs.sendMessage(tabId, {
@@ -173,6 +177,11 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       console.log("Content script not ready yet");
     }
   } else {
+    // Briefly happy then settle back to normal
+    chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "happy" } }).catch(() => {});
+    setTimeout(() => {
+      chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "normal" } }).catch(() => {});
+    }, 2500);
     chrome.action.setBadgeText({ tabId, text: "" });
   }
 });

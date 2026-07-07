@@ -30,17 +30,21 @@ function createAvatar() {
         <!-- Eyes -->
         <g class="eldenguard-eye">
           <circle cx="13" cy="14" r="4.5" fill="#CADCFC"/>
-          <circle cx="13" cy="14" r="3" fill="#00A896"/>
+          <circle id="eldenguard-iris-left" cx="13" cy="14" r="3" fill="#00A896"/>
           <circle id="eldenguard-pupil-left" cx="13" cy="14" r="1.5" fill="#062A52"/>
         </g>
         <g class="eldenguard-eye">
           <circle cx="23" cy="14" r="4.5" fill="#CADCFC"/>
-          <circle cx="23" cy="14" r="3" fill="#00A896"/>
+          <circle id="eldenguard-iris-right" cx="23" cy="14" r="3" fill="#00A896"/>
           <circle id="eldenguard-pupil-right" cx="23" cy="14" r="1.5" fill="#062A52"/>
         </g>
+        <!-- Eyebrows (populated by setExpression) -->
+        <g id="eldenguard-eyebrows"></g>
         <!-- Beak -->
         <path d="M15 19 L18 22 L21 19 Q18 17 15 19Z" fill="#F5A623"/>
       </g>
+      <!-- Thought bubbles (populated by setExpression, outside head transform) -->
+      <g id="eldenguard-thought-bubbles"></g>
       <!-- Shield emblem on chest -->
       <path d="M18 26 L22 27.5 L22 32.5 Q22 35 18 36 Q14 35 14 32.5 L14 27.5 Z" fill="#00A896"/>
       <path d="M16 31 L17.5 33 L20.5 29" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
@@ -210,6 +214,71 @@ function scheduleNextBlink() {
   }, delay);
 }
 
+// FACIAL EXPRESSIONS
+// Each expression sets iris colour, eyebrow paths, and optional thought bubbles.
+// Eyebrows are in SVG-group coords (scaled head space): left eye cx=13, right eye cx=23, both cy≈14.
+// Thought bubbles are in root SVG coords (viewBox 0-36).
+const EXPRESSIONS = {
+  normal: {
+    irisColor: '#00A896',
+    eyebrows: '',
+    thoughtBubbles: '',
+  },
+  happy: {
+    irisColor: '#22C55E',
+    // Gently arched brows — friendly & relaxed
+    eyebrows: [
+      '<path d="M10.5 10.5 Q13 9 15.5 10.5" stroke="#F5A623" stroke-width="1.4" stroke-linecap="round" fill="none"/>',
+      '<path d="M20.5 10.5 Q23 9 25.5 10.5" stroke="#F5A623" stroke-width="1.4" stroke-linecap="round" fill="none"/>',
+    ].join(''),
+    thoughtBubbles: '',
+  },
+  angry: {
+    irisColor: '#DC2626',
+    // Classic angry V: outer corners high, inner corners drop toward center
+    eyebrows: [
+      '<path d="M10.5 9.5 L15.5 12" stroke="#DC2626" stroke-width="1.7" stroke-linecap="round" fill="none"/>',
+      '<path d="M20.5 12 L25.5 9.5" stroke="#DC2626" stroke-width="1.7" stroke-linecap="round" fill="none"/>',
+    ].join(''),
+    thoughtBubbles: '',
+  },
+  worried: {
+    irisColor: '#F97316',
+    // Inverted V: inner corners raised, outer corners drop — concerned/sad
+    eyebrows: [
+      '<path d="M10.5 12 L15.5 9.5" stroke="#F5A623" stroke-width="1.4" stroke-linecap="round" fill="none"/>',
+      '<path d="M20.5 9.5 L25.5 12" stroke="#F5A623" stroke-width="1.4" stroke-linecap="round" fill="none"/>',
+    ].join(''),
+    thoughtBubbles: '',
+  },
+  thinking: {
+    irisColor: '#00A896',
+    // One raised right brow — quizzical/curious
+    eyebrows: '<path d="M20.5 10 Q23 8.5 25.5 10" stroke="#F5A623" stroke-width="1.4" stroke-linecap="round" fill="none"/>',
+    // Thought bubbles rising from upper-right of head (root SVG coords)
+    thoughtBubbles: [
+      '<circle cx="29" cy="9" r="1.3" fill="#CADCFC" opacity="0.85"/>',
+      '<circle cx="31.5" cy="6" r="1" fill="#CADCFC" opacity="0.85"/>',
+      '<circle cx="33.5" cy="3.5" r="0.7" fill="#CADCFC" opacity="0.85"/>',
+    ].join(''),
+  },
+};
+
+function setExpression(type) {
+  if (!avatarBtn) return;
+  const expr = EXPRESSIONS[type] || EXPRESSIONS.normal;
+
+  const irisLeft = document.getElementById('eldenguard-iris-left');
+  const irisRight = document.getElementById('eldenguard-iris-right');
+  const eyebrows = document.getElementById('eldenguard-eyebrows');
+  const thoughtBubbles = document.getElementById('eldenguard-thought-bubbles');
+
+  if (irisLeft) irisLeft.setAttribute('fill', expr.irisColor);
+  if (irisRight) irisRight.setAttribute('fill', expr.irisColor);
+  if (eyebrows) eyebrows.innerHTML = expr.eyebrows;
+  if (thoughtBubbles) thoughtBubbles.innerHTML = expr.thoughtBubbles;
+}
+
 // SIDEBAR
 function createSidebar() {
   if (document.getElementById("eldenguard-sidebar")) return;
@@ -256,7 +325,7 @@ function showAlertBanner(level, message) {
   alertBanner.className = `eldenguard-alert--${level}`;
   alertBanner.innerHTML = `
     <span class="eldenguard-alert__text">${message}</span>
-    <button class="eldenguard-alert__close" aria-label="Dismiss warning">�</button>
+    <button class="eldenguard-alert__close" aria-label="Dismiss warning">✕</button>
   `;
 
   alertBanner.querySelector(".eldenguard-alert__close").addEventListener("click", () => {
@@ -433,6 +502,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }, 300);
   }
 
+  if (message.type === "SET_EXPRESSION") {
+    setExpression(message.payload.expression);
+  }
+
   return true;
 });
 
@@ -444,6 +517,10 @@ window.addEventListener("message", async (event) => {
       { type: "SCREENSHOT_READY", dataUrl },
       "*"
     );
+  }
+
+  if (event.data?.type === "SET_EXPRESSION") {
+    setExpression(event.data.expression);
   }
 });
 
