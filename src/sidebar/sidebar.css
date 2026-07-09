@@ -107,15 +107,87 @@ body { font-family: var(--font); font-size: 15px; background: #fff; color: var(-
 }
 
 .chat__welcome {
-  background: var(--offwh);
-  border-radius: 12px;
-  padding: 14px 16px;
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--gray);
-  border-left: 3px solid var(--teal);
+  margin: auto;
+  width: 100%;
+  text-align: center;
+  padding: 8px 16px 24px;
+  transition: opacity 0.22s ease, transform 0.22s ease;
 }
-.chat__welcome p + p { margin-top: 8px; }
+
+.chat__welcome.welcome--hiding {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.97);
+  pointer-events: none;
+}
+
+/* Floating owl illustration */
+@keyframes owl-float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+.welcome__owl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: var(--offwh);
+  border: 2px solid #E2E8F0;
+  margin-bottom: 16px;
+  animation: owl-float 3.5s ease-in-out infinite;
+}
+
+.welcome__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+
+.welcome__subtitle {
+  font-size: 13px;
+  color: var(--gray);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+/* Hero action cards */
+.welcome__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.welcome__action-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 14px 8px;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.welcome__action-card:hover {
+  border-color: var(--teal);
+  box-shadow: 0 4px 14px rgba(0, 168, 150, 0.15);
+  transform: translateY(-2px);
+}
+
+.welcome__action-card:active { transform: translateY(0); }
+.welcome__action-icon  { font-size: 22px; line-height: 1; }
+.welcome__action-label { font-size: 13px; font-weight: 600; color: var(--dkgray); }
+.welcome__action-desc  { font-size: 11px; color: var(--gray); }
+
+/* Footer shortcuts hidden until chat is active */
+.input-area__shortcuts { display: none; }
+.sidebar[data-chat-state="active"] .input-area__shortcuts { display: flex; }
 
 /* Message bubbles */
 @keyframes message-in {

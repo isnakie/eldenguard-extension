@@ -3,6 +3,7 @@ import { getScamAlerts } from '../utils/rss.js';
 
 let currentUrl = "";
 let isWaiting = false;
+let welcomeShown = true;
 
 const chatEl     = document.getElementById("chat-messages");
 const inputEl    = document.getElementById("chat-input");
@@ -15,26 +16,40 @@ document.getElementById("btn-close-sidebar").addEventListener("click", () => {
   window.parent.postMessage({ type: "TOGGLE_SIDEBAR" }, "*");
 });
 
-// ─── QUICK ACTIONS ────────────────────────────────────────────────────────────
-document.getElementById("btn-check-page").addEventListener("click", () => {
-  sendQuestion(
-    "Analyze this page for safety threats. Check: (1) Is the URL legitimate or does it mimic a trusted brand? " +
-    "(2) Are there urgency tactics, suspicious requests, or pressure to act fast? " +
-    "(3) Are there any other red flags? Give me a clear Safe / Suspicious / Dangerous verdict with a one-sentence reason."
-  );
-});
+// ─── WELCOME HERO ─────────────────────────────────────────────────────────────
+function hideWelcome() {
+  if (!welcomeShown) return;
+  welcomeShown = false;
+  const welcome = document.querySelector('.chat__welcome');
+  if (welcome) {
+    welcome.classList.add('welcome--hiding');
+    setTimeout(() => welcome.remove(), 220);
+  }
+  document.querySelector('.sidebar').dataset.chatState = 'active';
+}
 
-document.getElementById("btn-explain").addEventListener("click", () => {
-  sendQuestion(
-    "In 2–3 sentences: what is this website, who runs it, and should I trust it? " +
-    "Note any red flags in the URL or page context, or confirm it looks legitimate."
-  );
-});
+const CHECK_PROMPT =
+  "Analyze this page for safety threats. Check: (1) Is the URL legitimate or does it mimic a trusted brand? " +
+  "(2) Are there urgency tactics, suspicious requests, or pressure to act fast? " +
+  "(3) Are there any other red flags? Give me a clear Safe / Suspicious / Dangerous verdict with a one-sentence reason.";
+
+const EXPLAIN_PROMPT =
+  "In 2–3 sentences: what is this website, who runs it, and should I trust it? " +
+  "Note any red flags in the URL or page context, or confirm it looks legitimate.";
+
+// Hero card buttons
+document.getElementById("btn-check-hero").addEventListener("click", () => sendQuestion(CHECK_PROMPT));
+document.getElementById("btn-explain-hero").addEventListener("click", () => sendQuestion(EXPLAIN_PROMPT));
+
+// ─── QUICK ACTIONS ────────────────────────────────────────────────────────────
+document.getElementById("btn-check-page").addEventListener("click", () => sendQuestion(CHECK_PROMPT));
+document.getElementById("btn-explain").addEventListener("click", () => sendQuestion(EXPLAIN_PROMPT));
 
 // ─── SEND MESSAGE ─────────────────────────────────────────────────────────────
 function sendQuestion(text) {
   if (!text.trim() || isWaiting) return;
 
+  hideWelcome();
   addMessage("user", text);
   inputEl.value = "";
   showTyping();
