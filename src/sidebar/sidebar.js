@@ -41,9 +41,6 @@ const EXPLAIN_PROMPT =
 document.getElementById("btn-check-hero").addEventListener("click", () => sendQuestion(CHECK_PROMPT));
 document.getElementById("btn-explain-hero").addEventListener("click", () => sendQuestion(EXPLAIN_PROMPT));
 
-// ─── QUICK ACTIONS ────────────────────────────────────────────────────────────
-document.getElementById("btn-check-page").addEventListener("click", () => sendQuestion(CHECK_PROMPT));
-document.getElementById("btn-explain").addEventListener("click", () => sendQuestion(EXPLAIN_PROMPT));
 
 // ─── SEND MESSAGE ─────────────────────────────────────────────────────────────
 function sendQuestion(text) {

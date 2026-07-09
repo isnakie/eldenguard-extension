@@ -70,6 +70,7 @@ body { font-family: var(--font); font-size: 15px; background: #fff; color: var(-
 /* ── Quick actions (single Scam Alerts button) ───────────────────────────────── */
 .quick-actions {
   display: flex;
+  justify-content: center;
   padding: 8px 12px;
   background: var(--offwh);
   border-bottom: 1px solid #E2E8F0;
@@ -185,9 +186,6 @@ body { font-family: var(--font); font-size: 15px; background: #fff; color: var(-
 .welcome__action-label { font-size: 13px; font-weight: 600; color: var(--dkgray); }
 .welcome__action-desc  { font-size: 11px; color: var(--gray); }
 
-/* Footer shortcuts hidden until chat is active */
-.input-area__shortcuts { display: none; }
-.sidebar[data-chat-state="active"] .input-area__shortcuts { display: flex; }
 
 /* Message bubbles */
 @keyframes message-in {
