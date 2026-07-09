@@ -53,36 +53,33 @@ body { font-family: var(--font); font-size: 15px; background: #fff; color: var(-
 .sidebar__status.danger  { background: rgba(220,38,38,0.2); color: #FCA5A5; }
 .sidebar__status.checking { color: rgba(255,255,255,0.4); }
 
-/* ── Quick actions ───────────────────────────────────────────────────────────── */
+/* ── Quick actions (single Scam Alerts button) ───────────────────────────────── */
 .quick-actions {
   display: flex;
-  gap: 6px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   background: var(--offwh);
   border-bottom: 1px solid #E2E8F0;
   flex-shrink: 0;
 }
 
 .quick-btn {
-  flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 8px 4px;
+  gap: 6px;
+  padding: 6px 14px;
   border: 1px solid #E2E8F0;
-  border-radius: 8px;
+  border-radius: 20px;
   background: white;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--gray);
   font-family: var(--font);
   transition: all 0.15s;
 }
 
-.quick-btn:hover { border-color: var(--teal); color: var(--teal); background: #F0FDFB; }
+.quick-btn:hover { border-color: var(--danger); color: var(--danger); background: #FFF5F5; }
 .quick-btn:active { transform: scale(0.97); }
-.quick-btn__icon { font-size: 18px; line-height: 1; }
+.quick-btn__icon { font-size: 15px; line-height: 1; }
 
 /* ── Chat messages ───────────────────────────────────────────────────────────── */
 .chat {
@@ -148,6 +145,31 @@ body { font-family: var(--font); font-size: 15px; background: #fff; color: var(-
   border-top: 1px solid #E2E8F0;
   background: white;
 }
+
+.input-area__shortcuts {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.input-area__shortcut-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border: 1px solid #E2E8F0;
+  border-radius: 20px;
+  background: var(--offwh);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--gray);
+  font-family: var(--font);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.input-area__shortcut-btn:hover { border-color: var(--teal); color: var(--teal); background: #F0FDFB; }
+.input-area__shortcut-btn:active { transform: scale(0.97); }
 
 .input-area__row {
   display: flex;

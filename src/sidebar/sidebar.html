@@ -38,18 +38,6 @@
 
     <!-- Quick action buttons -->
     <div class="quick-actions" role="group" aria-label="Quick actions">
-      <button class="quick-btn" id="btn-check-page" title="Check if this page is safe">
-        <span class="quick-btn__icon">🛡</span>
-        <span>Check page</span>
-      </button>
-      <button class="quick-btn" id="btn-screenshot" title="Analyze something on screen">
-        <span class="quick-btn__icon">📸</span>
-        <span>Screen grab</span>
-      </button>
-      <button class="quick-btn" id="btn-explain" title="Explain what this page is about">
-        <span class="quick-btn__icon">💬</span>
-        <span>Explain page</span>
-      </button>
       <button class="quick-btn" id="btn-scam-alerts" title="Recent scam alerts from FTC">
         <span class="quick-btn__icon">🚨</span>
         <span>Scam Alerts</span>
@@ -72,12 +60,21 @@
     <main class="chat" id="chat-messages" aria-label="Chat with WiseOwl" aria-live="polite">
       <div class="chat__welcome">
         <p>Hi! I'm WiseOwl 👋</p>
-        <p>I'm here to help you stay safe online. Ask me anything about this page, or click a button above to get started.</p>
+        <p>I'm here to help you stay safe online. Ask me anything about this page, or use the buttons below to get started.</p>
       </div>
     </main>
 
     <!-- Input area -->
     <footer class="input-area">
+      <!-- Page action shortcuts above the textarea -->
+      <div class="input-area__shortcuts">
+        <button class="input-area__shortcut-btn" id="btn-check-page" title="Check if this page is safe">
+          🛡️ Check page
+        </button>
+        <button class="input-area__shortcut-btn" id="btn-explain" title="Explain what this page is about">
+          💬 Explain page
+        </button>
+      </div>
       <label for="chat-input" class="sr-only">Ask WiseOwl a question</label>
       <div class="input-area__row">
         <textarea

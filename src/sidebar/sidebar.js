@@ -2,7 +2,6 @@
 import { getScamAlerts } from '../utils/rss.js';
 
 let currentUrl = "";
-let pendingScreenshot = null;
 let isWaiting = false;
 
 const chatEl     = document.getElementById("chat-messages");
@@ -20,11 +19,6 @@ document.getElementById("btn-explain").addEventListener("click", () => {
   sendQuestion("What is this website about? Is it a legitimate site?");
 });
 
-document.getElementById("btn-screenshot").addEventListener("click", () => {
-  addMessage("guard", "I'll take a screenshot and analyze what's on screen...");
-  window.parent.postMessage({ type: "TAKE_SCREENSHOT" }, "*");
-});
-
 // ─── SEND MESSAGE ─────────────────────────────────────────────────────────────
 function sendQuestion(text) {
   if (!text.trim() || isWaiting) return;
@@ -36,11 +30,6 @@ function sendQuestion(text) {
   sendBtn.disabled = true;
 
   const payload = { question: text, url: currentUrl };
-  if (pendingScreenshot) {
-    payload.screenshot = pendingScreenshot;
-    pendingScreenshot = null;
-    clearScreenshotPreview();
-  }
 
   window.parent.postMessage({ type: "SET_EXPRESSION", expression: "thinking" }, "*");
 
@@ -110,11 +99,6 @@ function removeTyping() {
   document.getElementById("typing")?.remove();
 }
 
-// ─── SCREENSHOT HANDLING ──────────────────────────────────────────────────────
-function clearScreenshotPreview() {
-  document.querySelector(".screenshot-preview")?.remove();
-}
-
 // ─── SCAM ALERTS PANEL ───────────────────────────────────────────────────────
 const alertsPanel  = document.getElementById("alerts-panel");
 const alertsList   = document.getElementById("alerts-list");
@@ -173,7 +157,7 @@ function escapeHtml(str) {
 
 // ─── MESSAGES FROM CONTENT SCRIPT ────────────────────────────────────────────
 window.addEventListener("message", (event) => {
-  const { type, url, text, dataUrl } = event.data ?? {};
+  const { type, url, text } = event.data ?? {};
 
   if (type === "SET_URL" && url) {
     currentUrl = url;
@@ -188,22 +172,5 @@ window.addEventListener("message", (event) => {
 
   if (type === "DISPLAY_RESPONSE" && text) {
     addMessage("guard", text);
-  }
-
-  if (type === "SCREENSHOT_READY" && dataUrl) {
-    pendingScreenshot = dataUrl;
-    // Show preview above input
-    clearScreenshotPreview();
-    const preview = document.createElement("div");
-    preview.className = "screenshot-preview";
-    preview.innerHTML = `
-      <img src="${dataUrl}" alt="Screenshot to analyze" />
-      <button class="screenshot-preview__remove" aria-label="Remove screenshot">✕</button>`;
-    preview.querySelector(".screenshot-preview__remove").addEventListener("click", () => {
-      pendingScreenshot = null;
-      clearScreenshotPreview();
-    });
-    document.querySelector(".input-area").prepend(preview);
-    addMessage("guard", "Got it! Ask me anything about what you see in the screenshot.");
   }
 });
