@@ -50,6 +50,48 @@ body { font-family: var(--font); font-size: 15px; background: #fff; color: var(-
 
 .sidebar__status { font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: 500; }
 
+/* ── Sun / Moon theme toggle ─────────────────────────────────────────────────── */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.theme-toggle__sun,
+.theme-toggle__moon { font-size: 13px; line-height: 1; transition: opacity 0.2s; }
+.theme-toggle__moon { opacity: 0.4; }
+
+.theme-toggle__track {
+  width: 34px;
+  height: 18px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 9px;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.25s;
+}
+
+.theme-toggle__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark state */
+body.dark .theme-toggle__thumb   { transform: translateX(16px); }
+body.dark .theme-toggle__sun     { opacity: 0.4; }
+body.dark .theme-toggle__moon    { opacity: 1; }
+body.dark .theme-toggle__track   { background: rgba(255,255,255,0.35); }
+
 .sidebar__close {
   background: none;
   border: none;
@@ -442,3 +484,40 @@ body { font-family: var(--font); font-size: 15px; background: #fff; color: var(-
   text-align: center;
   padding: 4px 0 2px;
 }
+
+/* ── Dark mode ───────────────────────────────────────────────────────────────── */
+body.dark {
+  background: #0F172A;
+  color: #F1F5F9;
+  --dkgray: #F1F5F9;
+  --gray:   #94A3B8;
+  --offwh:  #1E293B;
+}
+
+body.dark .quick-actions          { background: #1A2744; border-color: #334155; }
+body.dark .quick-btn              { background: #1E293B; border-color: #334155; color: #94A3B8; }
+body.dark .quick-btn:hover        { background: #0F2C2A; border-color: var(--teal); color: var(--teal); }
+
+body.dark .chat                   { background: #0F172A; }
+
+body.dark .welcome__owl           { background: #1A2744; border-color: #334155; }
+body.dark .welcome__title         { color: #F1F5F9; }
+body.dark .welcome__action-card   { background: #1E293B; border-color: #334155; }
+body.dark .welcome__action-card:hover { background: #0F2C2A; border-color: var(--teal); }
+body.dark .welcome__action-label  { color: #F1F5F9; }
+
+body.dark .message--guard .message__bubble { background: #1E293B; border-color: #334155; color: #F1F5F9; }
+
+body.dark .input-area             { background: #0F172A; border-color: #334155; }
+body.dark .input-area__textarea   { background: #1E293B; border-color: #334155; color: #F1F5F9; }
+body.dark .input-area__textarea::placeholder { color: #475569; }
+body.dark .input-area__textarea:focus { border-color: var(--teal); }
+body.dark .input-area__send:disabled { background: #334155; }
+
+body.dark .alerts-panel           { background: #1A0A0A; }
+body.dark .alerts-panel__header   { background: #2D1515; border-color: #7F1D1D; }
+body.dark .alerts-panel__list     { background: #1A0A0A; }
+body.dark .alerts-panel__source   { border-color: #7F1D1D; }
+body.dark .alert-item             { background: #1E293B; border-color: #7F1D1D; color: #F1F5F9; }
+body.dark .alert-item:hover       { background: #2D1515; }
+body.dark .alert-item__title      { color: #F1F5F9; }

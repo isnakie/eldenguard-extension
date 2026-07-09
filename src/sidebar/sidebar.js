@@ -11,6 +11,18 @@ const sendBtn    = document.getElementById("btn-send");
 const urlLabel   = document.getElementById("current-url");
 const statusEl   = document.getElementById("safety-status");
 
+// ─── THEME TOGGLE ─────────────────────────────────────────────────────────────
+const THEME_KEY = 'wiseOwlDarkMode';
+
+chrome.storage.local.get([THEME_KEY], (result) => {
+  if (result[THEME_KEY]) document.body.classList.add('dark');
+});
+
+document.getElementById('btn-theme-toggle').addEventListener('click', () => {
+  const isDark = document.body.classList.toggle('dark');
+  chrome.storage.local.set({ [THEME_KEY]: isDark });
+});
+
 // ─── CLOSE BUTTON ─────────────────────────────────────────────────────────────
 document.getElementById("btn-close-sidebar").addEventListener("click", () => {
   window.parent.postMessage({ type: "TOGGLE_SIDEBAR" }, "*");
