@@ -75,6 +75,18 @@ inputEl.addEventListener("keydown", (e) => {
 });
 
 // ─── CHAT HELPERS ─────────────────────────────────────────────────────────────
+const OWL_AVATAR_SVG = `
+  <svg width="22" height="22" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="18" cy="15" r="12" fill="#0D3B6E"/>
+    <circle cx="13" cy="14" r="4.5" fill="#CADCFC"/>
+    <circle cx="13" cy="14" r="3" fill="#00A896"/>
+    <circle cx="13" cy="14" r="1.5" fill="#062A52"/>
+    <circle cx="23" cy="14" r="4.5" fill="#CADCFC"/>
+    <circle cx="23" cy="14" r="3" fill="#00A896"/>
+    <circle cx="23" cy="14" r="1.5" fill="#062A52"/>
+    <path d="M15 19 L18 22 L21 19 Q18 17 15 19Z" fill="#F5A623"/>
+  </svg>`;
+
 function addMessage(role, text) {
   const wrapper = document.createElement("div");
   wrapper.className = `message message--${role}`;
@@ -87,7 +99,19 @@ function addMessage(role, text) {
   time.className = "message__time";
   time.textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-  wrapper.appendChild(bubble);
+  if (role === "guard") {
+    const row = document.createElement("div");
+    row.className = "message__row";
+    const avatar = document.createElement("div");
+    avatar.className = "message__avatar";
+    avatar.innerHTML = OWL_AVATAR_SVG;
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+    wrapper.appendChild(row);
+  } else {
+    wrapper.appendChild(bubble);
+  }
+
   wrapper.appendChild(time);
   chatEl.appendChild(wrapper);
   chatEl.scrollTop = chatEl.scrollHeight;
@@ -97,12 +121,19 @@ function showTyping() {
   const indicator = document.createElement("div");
   indicator.className = "message message--guard typing-indicator";
   indicator.id = "typing";
-  indicator.innerHTML = `
-    <div class="message__bubble">
-      <div class="typing-dot"></div>
-      <div class="typing-dot"></div>
-      <div class="typing-dot"></div>
-    </div>`;
+
+  const row = document.createElement("div");
+  row.className = "message__row";
+  const avatar = document.createElement("div");
+  avatar.className = "message__avatar";
+  avatar.innerHTML = OWL_AVATAR_SVG;
+  const bubble = document.createElement("div");
+  bubble.className = "message__bubble";
+  bubble.innerHTML = `<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>`;
+  row.appendChild(avatar);
+  row.appendChild(bubble);
+  indicator.appendChild(row);
+
   chatEl.appendChild(indicator);
   chatEl.scrollTop = chatEl.scrollHeight;
 }
