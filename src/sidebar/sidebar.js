@@ -12,11 +12,18 @@ const statusEl   = document.getElementById("safety-status");
 
 // ─── QUICK ACTIONS ────────────────────────────────────────────────────────────
 document.getElementById("btn-check-page").addEventListener("click", () => {
-  sendQuestion("Is this website safe? Please explain in simple terms.");
+  sendQuestion(
+    "Analyze this page for safety threats. Check: (1) Is the URL legitimate or does it mimic a trusted brand? " +
+    "(2) Are there urgency tactics, suspicious requests, or pressure to act fast? " +
+    "(3) Are there any other red flags? Give me a clear Safe / Suspicious / Dangerous verdict with a one-sentence reason."
+  );
 });
 
 document.getElementById("btn-explain").addEventListener("click", () => {
-  sendQuestion("What is this website about? Is it a legitimate site?");
+  sendQuestion(
+    "In 2–3 sentences: what is this website, who runs it, and should I trust it? " +
+    "Note any red flags in the URL or page context, or confirm it looks legitimate."
+  );
 });
 
 // ─── SEND MESSAGE ─────────────────────────────────────────────────────────────
