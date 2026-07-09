@@ -10,6 +10,11 @@ const sendBtn    = document.getElementById("btn-send");
 const urlLabel   = document.getElementById("current-url");
 const statusEl   = document.getElementById("safety-status");
 
+// ─── CLOSE BUTTON ─────────────────────────────────────────────────────────────
+document.getElementById("btn-close-sidebar").addEventListener("click", () => {
+  chrome.runtime.sendMessage({ type: "TOGGLE_SIDEBAR" });
+});
+
 // ─── QUICK ACTIONS ────────────────────────────────────────────────────────────
 document.getElementById("btn-check-page").addEventListener("click", () => {
   sendQuestion(
