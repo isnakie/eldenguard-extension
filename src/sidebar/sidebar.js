@@ -12,7 +12,7 @@ const statusEl   = document.getElementById("safety-status");
 
 // ─── CLOSE BUTTON ─────────────────────────────────────────────────────────────
 document.getElementById("btn-close-sidebar").addEventListener("click", () => {
-  chrome.runtime.sendMessage({ type: "TOGGLE_SIDEBAR" });
+  window.parent.postMessage({ type: "TOGGLE_SIDEBAR" }, "*");
 });
 
 // ─── QUICK ACTIONS ────────────────────────────────────────────────────────────

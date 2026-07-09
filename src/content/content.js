@@ -522,6 +522,10 @@ window.addEventListener("message", async (event) => {
   if (event.data?.type === "SET_EXPRESSION") {
     setExpression(event.data.expression);
   }
+
+  if (event.data?.type === "TOGGLE_SIDEBAR") {
+    toggleSidebar();
+  }
 });
 
 // INIT
