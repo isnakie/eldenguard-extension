@@ -40,12 +40,17 @@ function hideWelcome() {
   document.querySelector('.sidebar').dataset.chatState = 'active';
 }
 
-// Reads the AI response text and maps it to an owl expression
+// Reads the AI response text and maps it to an owl expression.
+// Check safe signals FIRST so cautionary boilerplate in safe responses
+// ("always be careful", "I cannot confirm every detail") doesn't trigger suspicious.
 function detectVerdict(text) {
   const t = text.toLowerCase();
-  if (/dangerous|phishing|malware|confirmed.{0,20}scam|do not|avoid/.test(t)) return "angry";
-  if (/suspicious|caution|red flag|unfamiliar|unverified|exercise caution|not widely|cannot confirm/.test(t)) return "suspicious";
-  if (/safe|legitimate|trusted|trustworthy|official|no red flags|looks (okay|good)/.test(t)) return "happy";
+  const hasSafe = /\b(safe|legitimate|trusted|trustworthy|official|no red flags|looks (okay|good|legitimate))\b/.test(t);
+  const hasThreat = /\bsuspicious\b|red flag|not (widely |officially )recognized|unverified domain|raises concerns|phishing|malware|dangerous/.test(t);
+
+  if (hasSafe && !hasThreat) return "happy";
+  if (/\bdangerous\b|phishing|malware|do not (visit|enter|use)|avoid this site/.test(t)) return "angry";
+  if (hasThreat) return "suspicious";
   return "normal";
 }
 
