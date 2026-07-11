@@ -4,6 +4,8 @@
 import { BACKEND_SAFE_BROWSING_URL } from './config.js';
 
 // Patterns commonly found in elder-targeted scam URLs
+// Keep these specific — broad words like "scam" or "phishing" appear in legitimate
+// security-awareness URLs (e.g. consumer.ftc.gov/scams) and cause false positives.
 const SCAM_HEURISTICS = [
   /medicare.*update/i,
   /irs.*refund/i,
@@ -13,8 +15,6 @@ const SCAM_HEURISTICS = [
   /confirm.*identity.*urgent/i,
   /free.*gift.*claim/i,
   /tech.*support.*warning/i,
-  /phishing/i,
-  /scam/i
 ];
 
 // Domains that frequently impersonate trusted services
@@ -25,7 +25,7 @@ const SUSPICIOUS_TLD_PATTERNS = [
   /apple\.(?!com)/i,
 ];
 
-// Known safe domains for demo
+// Known safe domains — subdomains are also matched (hostname.includes(domain))
 const SAFE_DOMAINS = [
   'google.com',
   'github.com',
@@ -34,7 +34,14 @@ const SAFE_DOMAINS = [
   'youtube.com',
   'amazon.com',
   'microsoft.com',
-  'apple.com'
+  'apple.com',
+  // US government and major public-interest domains
+  '.gov',
+  '.edu',
+  'ftc.gov',
+  'usa.gov',
+  'irs.gov',
+  'medicare.gov',
 ];
 
 async function querySafeBrowsingBackend(url) {

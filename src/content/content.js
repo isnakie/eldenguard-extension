@@ -9,6 +9,7 @@ let sidebarOpen = false;
 let sidebarFrame = null;
 let avatarBtn = null;
 let alertBanner = null;
+let pageIsThreat = false; // true when Safe Browsing flags the current page
 
 // FLAGGED LINK TRACKING (url -> [{ el, html }], so unlocking restores every
 // instance of a repeated link, e.g. the same scam URL in a header and footer)
@@ -550,7 +551,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.type === "SET_EXPRESSION") {
-    setExpression(message.payload.expression);
+    const expr = message.payload.expression;
+    if (expr === "angry") pageIsThreat = true;
+    setExpression(expr);
+  }
+
+  if (message.type === "THREAT_DETECTED") {
+    pageIsThreat = true;
+    if (!sidebarOpen) toggleSidebar();
+    // Give the sidebar iframe time to load before posting the warning
+    setTimeout(() => {
+      sidebarFrame?.contentWindow?.postMessage(
+        { type: "DISPLAY_RESPONSE", text: message.payload.text },
+        "*"
+      );
+    }, 500);
   }
 
   return true;
@@ -567,7 +582,10 @@ window.addEventListener("message", async (event) => {
   }
 
   if (event.data?.type === "SET_EXPRESSION") {
-    setExpression(event.data.expression);
+    const expr = event.data.expression;
+    // Don't let chat responses reset the angry expression on a flagged page
+    if (pageIsThreat && (expr === "happy" || expr === "normal")) return;
+    setExpression(expr);
   }
 
   if (event.data?.type === "TOGGLE_SIDEBAR") {

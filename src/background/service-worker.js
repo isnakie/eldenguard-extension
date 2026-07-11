@@ -153,6 +153,9 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status !== "complete" || !tab.url) return;
   if (tab.url.startsWith("chrome://") || tab.url.startsWith("about:") || tab.url.startsWith("edge://")) return;
 
+  // Small delay so the content script has time to finish initializing
+  await new Promise((resolve) => setTimeout(resolve, 600));
+
   // Show thinking expression while scanning
   chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "thinking" } }).catch(() => {});
 
@@ -160,22 +163,22 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   console.log("WiseOwl page check result:", safetyResult);
 
   if (safetyResult.isThreat) {
+    const warningText = formatChatMessage(safetyResult, tab.url);
+
     chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "angry" } }).catch(() => {});
-    // Alert the content script to show a warning banner
-    try {
-      chrome.tabs.sendMessage(tabId, {
-        type: "SHOW_ALERT",
-        payload: {
-          level: "danger",
-          message: formatAlertMessage(safetyResult),
-        },
-      });
-      // Update the extension badge
-      chrome.action.setBadgeText({ tabId, text: "!" });
-      chrome.action.setBadgeBackgroundColor({ tabId, color: "#DC2626" });
-    } catch (error) {
-      console.log("Content script not ready yet");
-    }
+    chrome.tabs.sendMessage(tabId, {
+      type: "SHOW_ALERT",
+      payload: { level: "danger", message: formatAlertMessage(safetyResult) },
+    }).catch(() => {});
+
+    // Auto-open the sidebar and display the threat warning inside it
+    chrome.tabs.sendMessage(tabId, {
+      type: "THREAT_DETECTED",
+      payload: { text: warningText },
+    }).catch(() => {});
+
+    chrome.action.setBadgeText({ tabId, text: "!" });
+    chrome.action.setBadgeBackgroundColor({ tabId, color: "#DC2626" });
   } else {
     // Briefly happy then settle back to normal
     chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "happy" } }).catch(() => {});
