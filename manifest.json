@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "EldenGuard",
+  "name": "WiseOwl",
   "version": "0.1.1",
   "description": "Your friendly browser safety co-pilot protecting you from scams and unsafe websites.",
 
@@ -33,13 +33,12 @@
   ],
 
   "action": {
-    "default_popup": "src/popup/popup.html",
     "default_icon": {
       "16":  "assets/icons/icon16.png",
       "48":  "assets/icons/icon48.png",
       "128": "assets/icons/icon128.png"
     },
-    "default_title": "EldenGuard"
+    "default_title": "WiseOwl"
   },
 
   "icons": {

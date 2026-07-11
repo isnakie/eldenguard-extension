@@ -87,6 +87,11 @@ chrome.runtime.onInstalled.addListener(createContextMenus);
 chrome.runtime.onStartup.addListener(createContextMenus);
 createContextMenus();
 
+// Clicking the toolbar icon toggles the sidebar (no popup)
+chrome.action.onClicked.addListener((tab) => {
+  chrome.tabs.sendMessage(tab.id, { type: "TOGGLE_SIDEBAR" }).catch(() => {});
+});
+
 // Refresh FTC RSS feed every hour in the background
 chrome.runtime.onInstalled.addListener(() => {
   chrome.alarms.create('refreshScamAlerts', { periodInMinutes: 60 });
