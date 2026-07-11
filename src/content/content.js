@@ -594,7 +594,13 @@ window.addEventListener("message", async (event) => {
   }
 });
 
-// INIT
-createAvatar();
-scanPageLinks();
-scheduleNextBlink();
+// INIT — guard against running in an invalidated extension context (e.g. after a reload)
+try {
+  chrome.runtime.getURL('');
+  createAvatar();
+  scanPageLinks();
+  scheduleNextBlink();
+} catch {
+  // Extension was reloaded while this tab was open — silently stop.
+  // Refreshing the tab will load the new content script.
+}
