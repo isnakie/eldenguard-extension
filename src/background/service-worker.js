@@ -190,12 +190,42 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     chrome.action.setBadgeText({ tabId, text: "!" });
     chrome.action.setBadgeBackgroundColor({ tabId, color: "#DC2626" });
   } else {
-    // Briefly happy then settle back to normal
-    chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "happy" } }).catch(() => {});
-    setTimeout(() => {
-      chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "normal" } }).catch(() => {});
-    }, 2500);
     chrome.action.setBadgeText({ tabId, text: "" });
+
+    // Safe Browsing found nothing — run a quick AI domain reputation check
+    try {
+      const domain = new URL(tab.url).hostname;
+      const aiReply = await callEldenGuardAPI({
+        message: `Rate the domain "${domain}" for safety. Reply with exactly one word: SAFE, SUSPICIOUS, or DANGEROUS.`,
+        url: tab.url,
+      });
+      const verdict = aiReply.trim().toUpperCase();
+
+      if (verdict.includes("DANGEROUS")) {
+        chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "angry" } }).catch(() => {});
+        chrome.tabs.sendMessage(tabId, {
+          type: "SHOW_ALERT",
+          payload: { level: "danger", message: `WiseOwl flagged ${domain} as potentially dangerous. Avoid entering personal information.` },
+        }).catch(() => {});
+      } else if (verdict.includes("SUSPICIOUS")) {
+        chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "suspicious" } }).catch(() => {});
+        chrome.tabs.sendMessage(tabId, {
+          type: "SHOW_ALERT",
+          payload: { level: "warning", message: `WiseOwl has concerns about ${domain}. Exercise caution before entering any information.` },
+        }).catch(() => {});
+      } else {
+        chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "happy" } }).catch(() => {});
+        setTimeout(() => {
+          chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "normal" } }).catch(() => {});
+        }, 2500);
+      }
+    } catch {
+      // AI check failed — fall back to happy → normal
+      chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "happy" } }).catch(() => {});
+      setTimeout(() => {
+        chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "normal" } }).catch(() => {});
+      }, 2500);
+    }
   }
 });
 

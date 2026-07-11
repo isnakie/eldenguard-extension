@@ -297,6 +297,20 @@ const EXPRESSIONS = {
     ].join(''),
     thoughtBubbles: '',
   },
+  suspicious: {
+    irisColor: '#F97316',
+    // Asymmetric brows — one flat, one raised → confused/uncertain look
+    eyebrows: [
+      '<path d="M10.5 11 L15.5 10" stroke="#F5A623" stroke-width="1.4" stroke-linecap="round" fill="none"/>',
+      '<path d="M20.5 9 Q23 7.5 25.5 10" stroke="#F5A623" stroke-width="1.4" stroke-linecap="round" fill="none"/>',
+    ].join(''),
+    // Red question mark badge in upper-right
+    thoughtBubbles: `
+      <circle cx="30" cy="5" r="4.2" fill="#DC2626" opacity="0.93"/>
+      <text x="30" y="5" font-size="6" font-weight="bold" fill="white"
+            text-anchor="middle" dominant-baseline="central"
+            font-family="Arial,sans-serif">?</text>`,
+  },
   thinking: {
     irisColor: '#00A896',
     // One raised right brow — quizzical/curious
@@ -591,6 +605,10 @@ window.addEventListener("message", async (event) => {
 
   if (event.data?.type === "TOGGLE_SIDEBAR") {
     toggleSidebar();
+  }
+
+  if (event.data?.type === "SHOW_PAGE_ALERT") {
+    showAlertBanner(event.data.level, event.data.message);
   }
 });
 

@@ -40,6 +40,15 @@ function hideWelcome() {
   document.querySelector('.sidebar').dataset.chatState = 'active';
 }
 
+// Reads the AI response text and maps it to an owl expression
+function detectVerdict(text) {
+  const t = text.toLowerCase();
+  if (/dangerous|phishing|malware|confirmed.{0,20}scam|do not|avoid/.test(t)) return "angry";
+  if (/suspicious|caution|red flag|unfamiliar|unverified|exercise caution|not widely|cannot confirm/.test(t)) return "suspicious";
+  if (/safe|legitimate|trusted|trustworthy|official|no red flags|looks (okay|good)/.test(t)) return "happy";
+  return "normal";
+}
+
 const CHECK_PROMPT =
   "Analyze this page for safety threats. Check: (1) Is the URL legitimate or does it mimic a trusted brand? " +
   "(2) Are there urgency tactics, suspicious requests, or pressure to act fast? " +
@@ -77,8 +86,25 @@ function sendQuestion(text, displayText) {
       sendBtn.disabled = false;
 
       if (response?.success) {
-        window.parent.postMessage({ type: "SET_EXPRESSION", expression: "happy" }, "*");
-        setTimeout(() => window.parent.postMessage({ type: "SET_EXPRESSION", expression: "normal" }, "*"), 2500);
+        const expr = detectVerdict(response.text);
+        window.parent.postMessage({ type: "SET_EXPRESSION", expression: expr }, "*");
+
+        if (expr === "suspicious") {
+          window.parent.postMessage({
+            type: "SHOW_PAGE_ALERT",
+            level: "warning",
+            message: "WiseOwl has concerns about this page. Exercise caution before entering any information.",
+          }, "*");
+        } else if (expr === "angry") {
+          window.parent.postMessage({
+            type: "SHOW_PAGE_ALERT",
+            level: "danger",
+            message: "WiseOwl flagged this page as potentially dangerous. Avoid entering personal information.",
+          }, "*");
+        } else {
+          setTimeout(() => window.parent.postMessage({ type: "SET_EXPRESSION", expression: "normal" }, "*"), 2500);
+        }
+
         addMessage("guard", response.text);
       } else {
         window.parent.postMessage({ type: "SET_EXPRESSION", expression: "worried" }, "*");
