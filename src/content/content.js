@@ -20,8 +20,8 @@ function createAvatar() {
 
   avatarBtn = document.createElement("button");
   avatarBtn.id = "eldenguard-avatar";
-  avatarBtn.setAttribute("aria-label", "Open EldenGuard assistant");
-  avatarBtn.title = "EldenGuard - click for help";
+  avatarBtn.setAttribute("aria-label", "Open WiseOwl assistant");
+  avatarBtn.title = "WiseOwl - click for help";
   avatarBtn.innerHTML = `
     <svg width="47" height="47" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <!-- Head (scaled up around its own center: bigger head, body stays put) -->
@@ -339,8 +339,8 @@ function createSidebar() {
   sidebarFrame = document.createElement("iframe");
   sidebarFrame.id = "eldenguard-sidebar";
   sidebarFrame.src = chrome.runtime.getURL("src/sidebar/sidebar.html");
-  sidebarFrame.setAttribute("aria-label", "EldenGuard assistant panel");
-  sidebarFrame.title = "EldenGuard";
+  sidebarFrame.setAttribute("aria-label", "WiseOwl assistant panel");
+  sidebarFrame.title = "WiseOwl";
 
   document.body.appendChild(sidebarFrame);
 }

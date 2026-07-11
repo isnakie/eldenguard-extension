@@ -19,7 +19,7 @@ export async function callEldenGuardAPI({ message, url }) {
       body: JSON.stringify({ message, url })
     });
   } catch (err) {
-    throw new Error('Cannot reach EldenGuard backend. Check your internet connection.');
+    throw new Error('Cannot reach WiseOwl backend. Check your internet connection.');
   }
 
   if (!response.ok) {
