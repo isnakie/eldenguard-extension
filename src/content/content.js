@@ -56,8 +56,19 @@ function createAvatar() {
       delete avatarBtn.dataset.suppressClick;
       return;
     }
+    if (avatarBtn.classList.contains("minimized")) {
+      setMinimized(false);
+      return;
+    }
     toggleSidebar();
   });
+
+  avatarBtn.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showAvatarMenu(e.clientX, e.clientY);
+  });
+
   document.body.appendChild(avatarBtn);
 
   initAvatarDragging();
@@ -68,6 +79,7 @@ function createAvatar() {
 // Position is saved to chrome.storage.local so the avatar stays where the
 // user put it across page loads and across every site they visit.
 const AVATAR_POSITION_KEY = "wiseowlAvatarPosition";
+const AVATAR_MINIMIZED_KEY = "wiseowlAvatarMinimized";
 const DRAG_THRESHOLD = 4; // px of movement before a click counts as a drag
 
 function clampAvatarPosition(left, top) {
@@ -87,12 +99,53 @@ function applyAvatarPosition(left, top) {
   avatarBtn.style.bottom = "auto";
 }
 
+function setMinimized(minimized) {
+  avatarBtn.classList.toggle("minimized", minimized);
+  chrome.storage.local.set({ [AVATAR_MINIMIZED_KEY]: minimized });
+}
+
+function showAvatarMenu(x, y) {
+  document.getElementById("eldenguard-context-menu")?.remove();
+
+  const menu = document.createElement("div");
+  menu.id = "eldenguard-context-menu";
+
+  const isMinimized = avatarBtn.classList.contains("minimized");
+  const label = isMinimized ? "Restore WiseOwl" : "Minimize WiseOwl";
+
+  const item = document.createElement("button");
+  item.textContent = label;
+  item.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setMinimized(!isMinimized);
+    menu.remove();
+  });
+  menu.appendChild(item);
+  document.body.appendChild(menu);
+
+  // Keep menu on screen
+  const menuW = 160, menuH = 40;
+  menu.style.left = `${Math.min(x, window.innerWidth - menuW - 8)}px`;
+  menu.style.top  = `${Math.min(y, window.innerHeight - menuH - 8)}px`;
+
+  const dismiss = () => menu.remove();
+  setTimeout(() => {
+    document.addEventListener("click", dismiss, { once: true });
+    document.addEventListener("contextmenu", dismiss, { once: true });
+    document.addEventListener("keydown", dismiss, { once: true });
+  }, 0);
+}
+
 function restoreAvatarPosition() {
-  chrome.storage.local.get([AVATAR_POSITION_KEY], (result) => {
+  chrome.storage.local.get([AVATAR_POSITION_KEY, AVATAR_MINIMIZED_KEY], (result) => {
     const saved = result[AVATAR_POSITION_KEY];
-    if (!saved) return;
-    const { left, top } = clampAvatarPosition(saved.left, saved.top);
-    applyAvatarPosition(left, top);
+    if (saved) {
+      const { left, top } = clampAvatarPosition(saved.left, saved.top);
+      applyAvatarPosition(left, top);
+    }
+    if (result[AVATAR_MINIMIZED_KEY]) {
+      avatarBtn.classList.add("minimized");
+    }
   });
 }
 
