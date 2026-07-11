@@ -25,24 +25,22 @@ function createAvatar() {
   avatarBtn.title = "WiseOwl - click for help";
   avatarBtn.innerHTML = `
     <svg width="47" height="47" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <g transform="translate(18,15) scale(1.2) translate(-18,-15)">
-        <circle cx="18" cy="15" r="12" fill="#0D3B6E"/>
+      <g transform="translate(18,18) scale(1.4) translate(-18,-15)">
+        <circle cx="18" cy="15" r="12" fill="#8B5E3C"/>
         <g class="eldenguard-eye">
           <circle cx="13" cy="14" r="4.5" fill="#CADCFC"/>
           <circle id="eldenguard-iris-left" cx="13" cy="14" r="3" fill="#00A896"/>
-          <circle id="eldenguard-pupil-left" cx="13" cy="14" r="1.5" fill="#062A52"/>
+          <circle id="eldenguard-pupil-left" cx="13" cy="14" r="1.5" fill="#3B1F0F"/>
         </g>
         <g class="eldenguard-eye">
           <circle cx="23" cy="14" r="4.5" fill="#CADCFC"/>
           <circle id="eldenguard-iris-right" cx="23" cy="14" r="3" fill="#00A896"/>
-          <circle id="eldenguard-pupil-right" cx="23" cy="14" r="1.5" fill="#062A52"/>
+          <circle id="eldenguard-pupil-right" cx="23" cy="14" r="1.5" fill="#3B1F0F"/>
         </g>
         <g id="eldenguard-eyebrows"></g>
         <path d="M15 19 L18 22 L21 19 Q18 17 15 19Z" fill="#F5A623"/>
       </g>
       <g id="eldenguard-thought-bubbles"></g>
-      <path d="M18 26 L22 27.5 L22 32.5 Q22 35 18 36 Q14 35 14 32.5 L14 27.5 Z" fill="#00A896"/>
-      <path d="M16 31 L17.5 33 L20.5 29" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
     </svg>
   `;
 
@@ -303,12 +301,15 @@ const EXPRESSIONS = {
     irisColor: '#00A896',
     // One raised right brow — quizzical/curious
     eyebrows: '<path d="M20.5 10 Q23 8.5 25.5 10" stroke="#F5A623" stroke-width="1.4" stroke-linecap="round" fill="none"/>',
-    // Thought bubbles rising from upper-right of head (root SVG coords)
-    thoughtBubbles: [
-      '<circle cx="29" cy="9" r="1.3" fill="#CADCFC" opacity="0.85"/>',
-      '<circle cx="31.5" cy="6" r="1" fill="#CADCFC" opacity="0.85"/>',
-      '<circle cx="33.5" cy="3.5" r="0.7" fill="#CADCFC" opacity="0.85"/>',
-    ].join(''),
+    // Spinning cog in upper-right corner (root SVG coords, center at 29,5)
+    // 12-point star alternating outer r=3.5 / inner r=2 — looks like a gear tooth
+    thoughtBubbles: `
+      <g class="eldenguard-spin-cog">
+        <path d="M32.5,5 L30.73,6 L30.75,8.03 L29,7 L27.25,8.03 L27.27,6
+                 L25.5,5 L27.27,4 L27.25,1.97 L29,3 L30.75,1.97 L30.73,4 Z"
+              fill="#CADCFC" opacity="0.9"/>
+        <circle cx="29" cy="5" r="1.2" fill="#0D3B6E"/>
+      </g>`,
   },
 };
 

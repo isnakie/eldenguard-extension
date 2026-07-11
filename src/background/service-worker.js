@@ -159,7 +159,12 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   // Show thinking expression while scanning
   chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "thinking" } }).catch(() => {});
 
+  const thinkingStart = Date.now();
   const safetyResult = await checkUrlSafety(tab.url);
+
+  // Keep the thinking animation visible for at least 1.5 s so users notice it
+  const elapsed = Date.now() - thinkingStart;
+  if (elapsed < 1500) await new Promise(r => setTimeout(r, 1500 - elapsed));
   console.log("WiseOwl page check result:", safetyResult);
 
   if (safetyResult.isThreat) {

@@ -103,6 +103,18 @@
   transform: scaleY(0.08);
 }
 
+/* Thinking cog animation */
+.eldenguard-spin-cog {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: eldenguard-cog-spin 2s linear infinite;
+}
+
+@keyframes eldenguard-cog-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 /* Pulse ring animation when a threat is detected */
 #eldenguard-avatar.danger-pulse::after {
   content: "";
