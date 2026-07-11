@@ -50,16 +50,16 @@ const EXPLAIN_PROMPT =
   "Note any red flags in the URL or page context, or confirm it looks legitimate.";
 
 // Hero card buttons
-document.getElementById("btn-check-hero").addEventListener("click", () => sendQuestion(CHECK_PROMPT));
-document.getElementById("btn-explain-hero").addEventListener("click", () => sendQuestion(EXPLAIN_PROMPT));
+document.getElementById("btn-check-hero").addEventListener("click", () => sendQuestion(CHECK_PROMPT, "Check this page for safety threats"));
+document.getElementById("btn-explain-hero").addEventListener("click", () => sendQuestion(EXPLAIN_PROMPT, "Explain this page"));
 
 
 // ─── SEND MESSAGE ─────────────────────────────────────────────────────────────
-function sendQuestion(text) {
+function sendQuestion(text, displayText) {
   if (!text.trim() || isWaiting) return;
 
   hideWelcome();
-  addMessage("user", text);
+  addMessage("user", displayText || text);
   inputEl.value = "";
   showTyping();
   isWaiting = true;

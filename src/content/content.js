@@ -24,10 +24,8 @@ function createAvatar() {
   avatarBtn.title = "WiseOwl - click for help";
   avatarBtn.innerHTML = `
     <svg width="47" height="47" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <!-- Head (scaled up around its own center: bigger head, body stays put) -->
       <g transform="translate(18,15) scale(1.2) translate(-18,-15)">
         <circle cx="18" cy="15" r="12" fill="#0D3B6E"/>
-        <!-- Eyes -->
         <g class="eldenguard-eye">
           <circle cx="13" cy="14" r="4.5" fill="#CADCFC"/>
           <circle id="eldenguard-iris-left" cx="13" cy="14" r="3" fill="#00A896"/>
@@ -38,14 +36,10 @@ function createAvatar() {
           <circle id="eldenguard-iris-right" cx="23" cy="14" r="3" fill="#00A896"/>
           <circle id="eldenguard-pupil-right" cx="23" cy="14" r="1.5" fill="#062A52"/>
         </g>
-        <!-- Eyebrows (populated by setExpression) -->
         <g id="eldenguard-eyebrows"></g>
-        <!-- Beak -->
         <path d="M15 19 L18 22 L21 19 Q18 17 15 19Z" fill="#F5A623"/>
       </g>
-      <!-- Thought bubbles (populated by setExpression, outside head transform) -->
       <g id="eldenguard-thought-bubbles"></g>
-      <!-- Shield emblem on chest -->
       <path d="M18 26 L22 27.5 L22 32.5 Q22 35 18 36 Q14 35 14 32.5 L14 27.5 Z" fill="#00A896"/>
       <path d="M16 31 L17.5 33 L20.5 29" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
     </svg>
