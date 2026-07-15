@@ -41,16 +41,22 @@ function hideWelcome() {
 }
 
 // Reads the AI response text and maps it to an owl expression.
-// Check safe signals FIRST so cautionary boilerplate in safe responses
-// ("always be careful", "I cannot confirm every detail") doesn't trigger suspicious.
+// Prioritises the explicit "Verdict: X" marker WiseOwl always appends,
+// so negated phrases like "no red flags" never trigger a false positive.
 function detectVerdict(text) {
   const t = text.toLowerCase();
-  const hasSafe = /\b(safe|legitimate|trusted|trustworthy|official|no red flags|looks (okay|good|legitimate))\b/.test(t);
-  const hasThreat = /\bsuspicious\b|red flag|not (widely |officially )recognized|unverified domain|raises concerns|phishing|malware|dangerous/.test(t);
 
-  if (hasSafe && !hasThreat) return "happy";
-  if (/\bdangerous\b|phishing|malware|do not (visit|enter|use)|avoid this site/.test(t)) return "angry";
-  if (hasThreat) return "suspicious";
+  // 1. Explicit verdict stamp (most reliable signal)
+  if (/verdict\s*[:—]\s*(safe|all clear)|\ball clear\b|nothing mousy/.test(t)) return "happy";
+  if (/verdict\s*[:—]\s*dangerous|do not (visit|enter|use)|avoid this site|phishing|malware/.test(t)) return "angry";
+  if (/verdict\s*[:—]\s*suspicious/.test(t)) return "suspicious";
+
+  // 2. Fallback: broad keywords, but only when not negated
+  const safePhrases   = /\b(safe|legitimate|trusted|trustworthy|official)\b/.test(t) && !/not safe|unsafe/.test(t);
+  const threatPhrases = /\bsuspicious\b/.test(t) && !/not suspicious|no suspicious|isn't suspicious/.test(t);
+
+  if (safePhrases && !threatPhrases) return "happy";
+  if (threatPhrases && !safePhrases) return "suspicious";
   return "normal";
 }
 
@@ -107,6 +113,8 @@ function sendQuestion(text, displayText) {
             message: "WiseOwl flagged this page as potentially dangerous. Avoid entering personal information.",
           }, "*");
         } else {
+          // Safe verdict — clear any lingering warning banner
+          window.parent.postMessage({ type: "CLEAR_ALERT" }, "*");
           setTimeout(() => window.parent.postMessage({ type: "SET_EXPRESSION", expression: "normal" }, "*"), 2500);
         }
 

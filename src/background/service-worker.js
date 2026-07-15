@@ -192,12 +192,22 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   } else {
     chrome.action.setBadgeText({ tabId, text: "" });
 
-    // Safe Browsing found nothing — run a quick AI domain reputation check
+    // Skip AI check for domains already cleared by the local whitelist
+    if (safetyResult.source === 'local_whitelist') {
+      chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "happy" } }).catch(() => {});
+      setTimeout(() => {
+        chrome.tabs.sendMessage(tabId, { type: "SET_EXPRESSION", payload: { expression: "normal" } }).catch(() => {});
+      }, 2500);
+      return;
+    }
+
+    // Safe Browsing found nothing on an unknown domain — run a quick AI reputation check.
+    // Only pass the hostname (not the full URL) so query parameters don't mislead the AI.
     try {
       const domain = new URL(tab.url).hostname;
       const aiReply = await callEldenGuardAPI({
         message: `Rate the domain "${domain}" for safety. Reply with exactly one word: SAFE, SUSPICIOUS, or DANGEROUS.`,
-        url: tab.url,
+        url: `https://${domain}`,
       });
       const verdict = aiReply.trim().toUpperCase();
 

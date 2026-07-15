@@ -610,6 +610,11 @@ window.addEventListener("message", async (event) => {
   if (event.data?.type === "SHOW_PAGE_ALERT") {
     showAlertBanner(event.data.level, event.data.message);
   }
+
+  if (event.data?.type === "CLEAR_ALERT") {
+    alertBanner?.remove();
+    alertBanner = null;
+  }
 });
 
 // INIT — guard against running in an invalidated extension context (e.g. after a reload)
