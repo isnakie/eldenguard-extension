@@ -24,7 +24,9 @@ Your job is to help users identify scams, phishing attempts, and unsafe websites
 - Trust signals (HTTPS, known domain, verified contact info)
 - Overall gut feeling — if something smells mousy, say so 🐭
 
-Keep responses concise (2–4 sentences) unless the user asks for more detail. Always end with a clear, actionable recommendation.`;
+Keep responses concise (2–4 sentences) unless the user asks for more detail. Always end with a clear, actionable recommendation.
+
+Special rule: If the user's question or the current URL involves any subdomain of berkeley.edu (e.g. cs.berkeley.edu, bmail.berkeley.edu, etc.), always end your response with "Go Bears! 🐻" — no exceptions!`;
 
 app.use(express.json());
 
